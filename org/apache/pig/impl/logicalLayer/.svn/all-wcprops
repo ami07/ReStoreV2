@@ -1,0 +1,413 @@
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer
+END
+LOProject.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOProject.java
+END
+LOLesserThan.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOLesserThan.java
+END
+RelationalOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/RelationalOperator.java
+END
+LOSplitOutput.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOSplitOutput.java
+END
+LOLimit.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOLimit.java
+END
+LOOr.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOOr.java
+END
+ExpressionOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/ExpressionOperator.java
+END
+LONotEqual.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LONotEqual.java
+END
+LOAdd.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOAdd.java
+END
+LOCross.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOCross.java
+END
+LOUserFunc.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOUserFunc.java
+END
+LogicalOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LogicalOperator.java
+END
+LOSplit.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOSplit.java
+END
+LOStore.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOStore.java
+END
+LOAnd.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOAnd.java
+END
+LOIsNull.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOIsNull.java
+END
+LOEqual.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOEqual.java
+END
+LOForEach.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOForEach.java
+END
+LOBinCond.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOBinCond.java
+END
+LOCogroup.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOCogroup.java
+END
+ProjectionMapRemover.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/ProjectionMapRemover.java
+END
+ProjectStarTranslator.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/ProjectStarTranslator.java
+END
+CanonicalNamer.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/CanonicalNamer.java
+END
+LOPrinter.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOPrinter.java
+END
+package.html
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/package.html
+END
+PlanSetter.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/PlanSetter.java
+END
+LOGenerate.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOGenerate.java
+END
+LORegexp.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LORegexp.java
+END
+LODefine.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LODefine.java
+END
+LOCast.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOCast.java
+END
+LOStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOStream.java
+END
+LogicalPlanCloner.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LogicalPlanCloner.java
+END
+LOJoin.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOJoin.java
+END
+LOLesserThanEqual.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOLesserThanEqual.java
+END
+LODivide.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LODivide.java
+END
+LOGreaterThan.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOGreaterThan.java
+END
+UDFFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/UDFFinder.java
+END
+TopLevelProjectFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/TopLevelProjectFinder.java
+END
+ProjectFixerUpper.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/ProjectFixerUpper.java
+END
+BinaryExpressionOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/BinaryExpressionOperator.java
+END
+LOFilter.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOFilter.java
+END
+LONative.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LONative.java
+END
+LOConst.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOConst.java
+END
+LOSubtract.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOSubtract.java
+END
+LOSort.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOSort.java
+END
+ProjectionMapCalculator.java
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/ProjectionMapCalculator.java
+END
+LogicalPlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LogicalPlan.java
+END
+LONot.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LONot.java
+END
+UnionOnSchemaSetter.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/UnionOnSchemaSetter.java
+END
+PColFilterExtractor.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/PColFilterExtractor.java
+END
+RemoveRedundantOperators.java
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/RemoveRedundantOperators.java
+END
+LOMapLookup.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOMapLookup.java
+END
+LogicalPlanCloneHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LogicalPlanCloneHelper.java
+END
+LOLoad.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOLoad.java
+END
+LOMod.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOMod.java
+END
+LOMultiply.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOMultiply.java
+END
+LODistinct.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LODistinct.java
+END
+CastFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/CastFinder.java
+END
+LOUnion.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOUnion.java
+END
+DotLOPrinter.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/DotLOPrinter.java
+END
+LOGreaterThanEqual.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOGreaterThanEqual.java
+END
+ColumnPruner.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/ColumnPruner.java
+END
+UnaryExpressionOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/UnaryExpressionOperator.java
+END
+LOVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LOVisitor.java
+END
+LogicalPlanBuilder.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LogicalPlanBuilder.java
+END
+ScalarFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/ScalarFinder.java
+END
+LONegative.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/LONegative.java
+END
+FrontendException.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/FrontendException.java
+END

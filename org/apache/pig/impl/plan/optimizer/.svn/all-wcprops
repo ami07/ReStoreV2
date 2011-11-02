@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer
+END
+OptimizerException.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/OptimizerException.java
+END
+RulePlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/RulePlan.java
+END
+RulePlanVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/RulePlanVisitor.java
+END
+Transformer.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/Transformer.java
+END
+RuleOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/RuleOperator.java
+END
+CommonNodeFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/CommonNodeFinder.java
+END
+RulePlanPrinter.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/RulePlanPrinter.java
+END
+Rule.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/Rule.java
+END
+RuleMatcher.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/RuleMatcher.java
+END
+PlanOptimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/plan/optimizer/PlanOptimizer.java
+END

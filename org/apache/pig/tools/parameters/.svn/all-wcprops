@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/parameters
+END
+ParameterSubstitutionPreprocessor.java
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/parameters/ParameterSubstitutionPreprocessor.java
+END
+ParamLoader.jj
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/parameters/ParamLoader.jj
+END
+PreprocessorContext.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/parameters/PreprocessorContext.java
+END
+PigFileParser.jj
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/parameters/PigFileParser.jj
+END

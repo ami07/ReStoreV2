@@ -1,0 +1,143 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util
+END
+ObjectSerializer.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/ObjectSerializer.java
+END
+Utils.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/Utils.java
+END
+LogUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/LogUtils.java
+END
+BagFormat.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/BagFormat.java
+END
+StorageUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/StorageUtil.java
+END
+TupleFormat.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/TupleFormat.java
+END
+LineageTracer.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/LineageTracer.java
+END
+Spillable.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/Spillable.java
+END
+JarManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/JarManager.java
+END
+IdentityHashSet.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/IdentityHashSet.java
+END
+WrappedIOException.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/WrappedIOException.java
+END
+CastUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/CastUtils.java
+END
+ConfigurationValidator.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/ConfigurationValidator.java
+END
+LinkedMultiMap.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/LinkedMultiMap.java
+END
+UDFContext.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/UDFContext.java
+END
+RewindableIterator.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/RewindableIterator.java
+END
+StringUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/StringUtils.java
+END
+MultiMap.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/MultiMap.java
+END
+PropertiesUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/PropertiesUtil.java
+END
+SpillableMemoryManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/SpillableMemoryManager.java
+END
+Pair.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/Pair.java
+END
+CompilerUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/CompilerUtils.java
+END
+UriUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/util/UriUtil.java
+END

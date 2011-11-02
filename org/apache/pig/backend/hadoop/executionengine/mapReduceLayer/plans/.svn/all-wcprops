@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans
+END
+MROperPlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans/MROperPlan.java
+END
+POPackageAnnotator.java
+K 25
+svn:wc:ra_dav:version-url
+V 145
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans/POPackageAnnotator.java
+END
+MRPrinter.java
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans/MRPrinter.java
+END
+UDFFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans/UDFFinder.java
+END
+MROpPlanVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans/MROpPlanVisitor.java
+END
+DotMRPrinter.java
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans/DotMRPrinter.java
+END
+EndOfAllInputSetter.java
+K 25
+svn:wc:ra_dav:version-url
+V 146
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans/EndOfAllInputSetter.java
+END
+ScalarPhyFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/plans/ScalarPhyFinder.java
+END

@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/plans
+END
+PhysicalPlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/plans/PhysicalPlan.java
+END
+DotPOPrinter.java
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/plans/DotPOPrinter.java
+END
+PhyPlanVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/plans/PhyPlanVisitor.java
+END
+PlanPrinter.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/plans/PlanPrinter.java
+END

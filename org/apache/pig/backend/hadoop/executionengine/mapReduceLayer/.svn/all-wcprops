@@ -1,0 +1,305 @@
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer
+END
+UDFFinishVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/UDFFinishVisitor.java
+END
+DistinctCombiner.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/DistinctCombiner.java
+END
+PigTupleDefaultRawComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 149
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigTupleDefaultRawComparator.java
+END
+CombinerOptimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/CombinerOptimizer.java
+END
+PhyPlanSetter.java
+K 25
+svn:wc:ra_dav:version-url
+V 134
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PhyPlanSetter.java
+END
+NativeMapReduceOper.java
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/NativeMapReduceOper.java
+END
+MapReducePOStoreImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/MapReducePOStoreImpl.java
+END
+SecondaryKeyOptimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/SecondaryKeyOptimizer.java
+END
+PigMapReduce.java
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigMapReduce.java
+END
+PigMapBase.java
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigMapBase.java
+END
+MRCompiler.java
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/MRCompiler.java
+END
+PigHadoopLogger.java
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigHadoopLogger.java
+END
+ProgressableReporter.java
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/ProgressableReporter.java
+END
+PigDoubleRawComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 143
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigDoubleRawComparator.java
+END
+ColumnChainInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/ColumnChainInfo.java
+END
+PigTextInputFormat.java
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigTextInputFormat.java
+END
+PigMapOnly.java
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigMapOnly.java
+END
+NoopFilterRemover.java
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/NoopFilterRemover.java
+END
+MultiQueryOptimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/MultiQueryOptimizer.java
+END
+RunJarSecurityManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/RunJarSecurityManager.java
+END
+MapReduceLauncher.java
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/MapReduceLauncher.java
+END
+PigBytesRawComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigBytesRawComparator.java
+END
+NoopStoreRemover.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/NoopStoreRemover.java
+END
+MRCompilerException.java
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/MRCompilerException.java
+END
+PigSecondaryKeyComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 146
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigSecondaryKeyComparator.java
+END
+MapReduceOper.java
+K 25
+svn:wc:ra_dav:version-url
+V 134
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/MapReduceOper.java
+END
+PigCombiner.java
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigCombiner.java
+END
+MergeJoinIndexer.java
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/MergeJoinIndexer.java
+END
+PigSequenceFileInputFormat.java
+K 25
+svn:wc:ra_dav:version-url
+V 147
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigSequenceFileInputFormat.java
+END
+PigLongRawComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigLongRawComparator.java
+END
+Launcher.java
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/Launcher.java
+END
+PigRecordReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigRecordReader.java
+END
+KeyTypeDiscoveryVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 144
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/KeyTypeDiscoveryVisitor.java
+END
+JobControlCompiler.java
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/JobControlCompiler.java
+END
+PigFloatRawComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigFloatRawComparator.java
+END
+PigInputFormat.java
+K 25
+svn:wc:ra_dav:version-url
+V 135
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigInputFormat.java
+END
+PigFileInputFormat.java
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigFileInputFormat.java
+END
+ColumnInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/ColumnInfo.java
+END
+PigOutputFormat.java
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigOutputFormat.java
+END
+SortKeyInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/SortKeyInfo.java
+END
+JobCreationException.java
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/JobCreationException.java
+END
+PigTextOutputFormat.java
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigTextOutputFormat.java
+END
+AccumulatorOptimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/AccumulatorOptimizer.java
+END
+PigOutputCommitter.java
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigOutputCommitter.java
+END
+SampleOptimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/SampleOptimizer.java
+END
+PigTextRawComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigTextRawComparator.java
+END
+PigTupleSortComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 143
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigTupleSortComparator.java
+END
+PigSplit.java
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigSplit.java
+END
+PigTupleRawComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigTupleRawComparator.java
+END
+PigIntRawComparator.java
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigIntRawComparator.java
+END

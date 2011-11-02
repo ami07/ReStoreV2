@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/util
+END
+MapRedUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/util/MapRedUtil.java
+END

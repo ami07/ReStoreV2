@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical
+END
+LogicalExpPlanMigrationVistor.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/LogicalExpPlanMigrationVistor.java
+END
+LogicalPlanMigrationVistor.java
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/LogicalPlanMigrationVistor.java
+END
+Util.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/Util.java
+END
+ForeachInnerPlanVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/ForeachInnerPlanVisitor.java
+END

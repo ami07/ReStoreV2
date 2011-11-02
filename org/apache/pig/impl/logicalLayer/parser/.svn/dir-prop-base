@@ -1,0 +1,13 @@
+K 10
+svn:ignore
+V 124
+
+TokenMgrError.java
+Token.java
+SimpleNode.java
+SimpleCharStream.java
+ParseException.java
+Node.java
+JJTQueryParserState.java
+
+END

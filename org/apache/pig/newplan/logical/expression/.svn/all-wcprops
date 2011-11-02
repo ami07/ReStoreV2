@@ -1,0 +1,197 @@
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression
+END
+ModExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/ModExpression.java
+END
+OrExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/OrExpression.java
+END
+BinaryExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/BinaryExpression.java
+END
+LogicalExpressionPlan.java
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/LogicalExpressionPlan.java
+END
+SubtractExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/SubtractExpression.java
+END
+NotEqualExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/NotEqualExpression.java
+END
+UserFuncExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/UserFuncExpression.java
+END
+ExpToPhyTranslationVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/ExpToPhyTranslationVisitor.java
+END
+GreaterThanExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/GreaterThanExpression.java
+END
+ProjectExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/ProjectExpression.java
+END
+IsNullExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/IsNullExpression.java
+END
+LessThanEqualExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/LessThanEqualExpression.java
+END
+RegexExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/RegexExpression.java
+END
+MultiplyExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/MultiplyExpression.java
+END
+LessThanExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/LessThanExpression.java
+END
+AddExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/AddExpression.java
+END
+ConstantExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/ConstantExpression.java
+END
+LogicalExpressionVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/LogicalExpressionVisitor.java
+END
+CastExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/CastExpression.java
+END
+GreaterThanEqualExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/GreaterThanEqualExpression.java
+END
+ColumnExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/ColumnExpression.java
+END
+UnaryExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/UnaryExpression.java
+END
+AllSameExpressionVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/AllSameExpressionVisitor.java
+END
+NotExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/NotExpression.java
+END
+NegativeExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/NegativeExpression.java
+END
+AndExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/AndExpression.java
+END
+DivideExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/DivideExpression.java
+END
+MapLookupExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/MapLookupExpression.java
+END
+DereferenceExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/DereferenceExpression.java
+END
+EqualExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/EqualExpression.java
+END
+LogicalExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/LogicalExpression.java
+END
+BinCondExpression.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/expression/BinCondExpression.java
+END

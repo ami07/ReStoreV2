@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/physicalOperators
+END
+POStreamLocal.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/physicalOperators/POStreamLocal.java
+END
+POCross.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/physicalOperators/POCross.java
+END
+POSplit.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/physicalOperators/POSplit.java
+END
+POSplitOutput.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/physicalOperators/POSplitOutput.java
+END
+POCogroup.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/physicalOperators/POCogroup.java
+END
+POCounter.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/physicalOperators/POCounter.java
+END

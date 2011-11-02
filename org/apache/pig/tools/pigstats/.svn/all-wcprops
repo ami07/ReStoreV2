@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats
+END
+OutputStats.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats/OutputStats.java
+END
+PigProgressNotificationListener.java
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats/PigProgressNotificationListener.java
+END
+ScriptState.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats/ScriptState.java
+END
+PigStatusReporter.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats/PigStatusReporter.java
+END
+JobStats.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats/JobStats.java
+END
+PigStatsUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats/PigStatsUtil.java
+END
+InputStats.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats/InputStats.java
+END
+PigStats.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/tools/pigstats/PigStats.java
+END

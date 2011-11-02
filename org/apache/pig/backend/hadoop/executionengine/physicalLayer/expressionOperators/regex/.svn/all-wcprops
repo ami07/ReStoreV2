@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/expressionOperators/regex
+END
+NonConstantRegex.java
+K 25
+svn:wc:ra_dav:version-url
+V 162
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/expressionOperators/regex/NonConstantRegex.java
+END
+CompiledAutomaton.java
+K 25
+svn:wc:ra_dav:version-url
+V 163
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/expressionOperators/regex/CompiledAutomaton.java
+END
+CompiledRegex.java
+K 25
+svn:wc:ra_dav:version-url
+V 159
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/expressionOperators/regex/CompiledRegex.java
+END
+RegexImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 155
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/expressionOperators/regex/RegexImpl.java
+END
+RegexInit.java
+K 25
+svn:wc:ra_dav:version-url
+V 155
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/backend/hadoop/executionengine/physicalLayer/expressionOperators/regex/RegexInit.java
+END

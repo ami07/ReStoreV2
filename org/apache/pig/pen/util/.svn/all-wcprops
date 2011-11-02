@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/util
+END
+FunctionalLogicalOptimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/util/FunctionalLogicalOptimizer.java
+END
+DisplayExamples.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/util/DisplayExamples.java
+END
+ExampleTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/util/ExampleTuple.java
+END
+LineageTracer.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/util/LineageTracer.java
+END
+PreOrderDepthFirstWalker.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/util/PreOrderDepthFirstWalker.java
+END
+DependencyOrderLimitedWalker.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/util/DependencyOrderLimitedWalker.java
+END
+MetricEvaluation.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/pen/util/MetricEvaluation.java
+END

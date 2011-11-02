@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer
+END
+UidResetter.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer/UidResetter.java
+END
+ProjectionPatcher.java
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer/ProjectionPatcher.java
+END
+SchemaPatcher.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer/SchemaPatcher.java
+END
+AllExpressionVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer/AllExpressionVisitor.java
+END
+LogicalPlanOptimizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer/LogicalPlanOptimizer.java
+END
+LogicalPlanPrinter.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer/LogicalPlanPrinter.java
+END
+AllSameRalationalNodesVisitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 130
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer/AllSameRalationalNodesVisitor.java
+END
+SchemaResetter.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/newplan/logical/optimizer/SchemaResetter.java
+END

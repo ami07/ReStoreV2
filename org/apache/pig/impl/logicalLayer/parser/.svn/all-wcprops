@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/parser
+END
+grammar
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/parser/grammar
+END
+QueryParser.jjt
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/asf/!svn/ver/1050214/pig/tags/release-0.8.0/src/org/apache/pig/impl/logicalLayer/parser/QueryParser.jjt
+END
