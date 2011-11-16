@@ -884,6 +884,10 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 			stores=new ArrayList<POStore>();
 		}
 		
+		//get the reducer
+		if(!reducePlan.isEmpty()){
+			
+		}
 		//get the mapper
 		if(!mapPlan.isEmpty()){
 			

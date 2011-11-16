@@ -735,8 +735,8 @@ public class POForEach extends PhysicalOperator {
 					return false;
 				}
 			}
-			
+			return true;
 		}
-		return true;
+		return false;
 	}
 }

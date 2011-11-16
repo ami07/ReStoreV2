@@ -44,6 +44,7 @@ import org.apache.pig.backend.hadoop.executionengine.physicalLayer.expressionOpe
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POFilter;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POForEach;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POLoad;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POLocalRearrange;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POSplit;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POStore;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.util.PlanHelper;
@@ -813,7 +814,7 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 						//check if the succ is a filter or foreach
 						//if(succ instanceof POFilter || succ instanceof POForEach){
 							//this is the subplan that we are looking for
-						if(! (succ instanceof POLoad) && ! (succ instanceof POStore) && this.getPredecessors(succ).size()==1 && this.getSuccessors(succ).size() >=1){	
+						if(! (succ instanceof POLoad) && ! (succ instanceof POStore) && this.getPredecessors(succ).size()==1 && this.getSuccessors(succ).size() >=1 && !(succ instanceof POLocalRearrange)){	
 							//STEP1:split the plan by adding a store after this filter/foreach op , then create two other plans
 							PhysicalPlan sharedOperatorsPlan=splitPlan(load, succ, pigContext,stores,newMapperRootPlans);
 							//PhysicalPlan sharedOperatorsPlan=createPlan(load, succ, pigContext,stores,newMapperRootPlans);
