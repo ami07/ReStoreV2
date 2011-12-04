@@ -45,6 +45,7 @@ import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOpe
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POForEach;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POLoad;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POLocalRearrange;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POPreCombinerLocalRearrange;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POSplit;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POStore;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.util.PlanHelper;
@@ -54,6 +55,7 @@ import org.apache.pig.builtin.PigStorage;
 import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.io.FileLocalizer;
 import org.apache.pig.impl.io.FileSpec;
+import org.apache.pig.impl.io.InterStorage;
 import org.apache.pig.impl.plan.NodeIdGenerator;
 import org.apache.pig.impl.plan.OperatorKey;
 import org.apache.pig.impl.plan.OperatorPlan;
@@ -86,6 +88,8 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
     // to know if all map() calls and reduce() calls are finished
     // and that there is no more input expected.
     public boolean endOfAllInput = false;
+
+	private static int tmpFileIter=0;
 
     
 
@@ -812,11 +816,18 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 					
 					if(isUseDiscovePlanHeuristics){
 						//check if the succ is a filter or foreach
-						//if(succ instanceof POFilter || succ instanceof POForEach){
+						if(succ instanceof POFilter || succ instanceof POForEach){
 							//this is the subplan that we are looking for
-						if(! (succ instanceof POLoad) && ! (succ instanceof POStore) && this.getPredecessors(succ).size()==1 && this.getSuccessors(succ).size() >=1 && !(succ instanceof POLocalRearrange)){	
+						//if(! (succ instanceof POLoad) && ! (succ instanceof POStore) && /*this.getPredecessors(succ).size()==1 &&*/ this.getSuccessors(succ).size() >=1 && !(succ instanceof POLocalRearrange)){	
 							//STEP1:split the plan by adding a store after this filter/foreach op , then create two other plans
-							PhysicalPlan sharedOperatorsPlan=splitPlan(load, succ, pigContext,stores,newMapperRootPlans);
+							List<PhysicalOperator> opSuccs = this.getSuccessors(succ); 
+							
+							PhysicalPlan sharedOperatorsPlan=null;
+							if(opSuccs==null || opSuccs.size()==0){
+								//sharedOperatorsPlan=duplicateLastMapperOp(succ, pigContext,stores);
+							}else{
+								 sharedOperatorsPlan=splitPlan(load, succ, pigContext,stores,planLoads, newMapperRootPlans);
+							}
 							//PhysicalPlan sharedOperatorsPlan=createPlan(load, succ, pigContext,stores,newMapperRootPlans);
 							//STEP1:clone the plan to this point
 							//PhysicalOperator newStore=null;
@@ -824,15 +835,32 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 							
 							//STEP2:add the cloned plan to the list of discovered plans
 							//discoveredPlans.add(sharedOperatorsPlan.clone());
-							discoveredPlans.add(sharedOperatorsPlan);
+							if(sharedOperatorsPlan!=null){
+								discoveredPlans.add(sharedOperatorsPlan);
+							}
 						}//end if instance of pofilter or poforeach
 					}else{
 						//allow inserting store after all operaors, except for the load and operators that have multiple predecessors (e.g. union)
-						if(! (succ instanceof POLoad) && this.getPredecessors(succ).size()==1){
+						/*if((succ instanceof POLocalRearrange || succ instanceof POPreCombinerLocalRearrange)){
+							//if succ is a localRearrange, move pointer to the following operator if any
+							List<PhysicalOperator> succSuccs = this.getSuccessors(succ); 
+							if(succSuccs!=null){
+								succ=succSuccs.get(0);
+							}
+						}*/
+						if(! (succ instanceof POLoad) && ! (succ instanceof POStore)  &&/*this.getPredecessors(succ).size()==1*//*!(succ instanceof POLocalRearrange) && !(succ instanceof POPreCombinerLocalRearrange) &&*/ ! hasStoreSuccessor(succ)){
 							//STEP1:split the plan by adding a store after this filter/foreach op , then create two other plans
-							PhysicalPlan sharedOperatorsPlan=splitPlan(load, succ, pigContext,stores,newMapperRootPlans);
+							PhysicalPlan sharedOperatorsPlan=null;
+							List<PhysicalOperator> opSuccs = this.getSuccessors(succ); 
+							if(opSuccs==null || opSuccs.size()==0){
+								//sharedOperatorsPlan=duplicateLastMapperOp(succ, pigContext,stores,newMapperRootPlans);
+							}else{
+								sharedOperatorsPlan=splitPlan(load, succ, pigContext,stores, planLoads, newMapperRootPlans);
+							}
 							//STEP2:add the cloned plan to the list of discovered plans
-							discoveredPlans.add(sharedOperatorsPlan);
+							if(sharedOperatorsPlan!=null){
+								discoveredPlans.add(sharedOperatorsPlan);
+							}
 						}
 						
 					}
@@ -840,6 +868,92 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 			}//end if loadsucc is valid
 		}
 		return discoveredPlans;
+	}
+
+	private PhysicalPlan duplicateLastMapperOp(PhysicalOperator lastOpToShare,
+			PigContext pigContext, List<POStore> stores, List<Pair<PhysicalPlan, PhysicalPlan>> newMapperRootPlans) throws CloneNotSupportedException, PlanException, VisitorException {
+		
+		//initialize a pair to include the two created plans
+		//Pair<PhysicalPlan, PhysicalPlan> newMapperRootPlansPair = new Pair<PhysicalPlan,PhysicalPlan>(null, null);
+		
+		//create a clone of the current plan to be shared
+		PhysicalPlan sharedOperatorsPlan=this.clone();
+		
+		//create a new store to copy the output of the mapper to it
+		String scope = lastOpToShare.getOperatorKey().scope;
+		NodeIdGenerator nodeGen = NodeIdGenerator.getGenerator();
+		//List<POStore> stores = PlanHelper.getStores(this);
+		/*FuncSpec funcSpec=new FuncSpec(PigStorage.class.getName() + "()");
+		if(stores!=null && !stores.isEmpty()){
+			for(POStore astore:stores){
+				funcSpec=astore.getSFile().getFuncSpec();
+				break;
+			}
+		}*/
+		FuncSpec funcSpec=new FuncSpec(InterStorage.class.getName());
+		POStore store = new POStore(new OperatorKey(scope, nodeGen.getNextNodeId(scope)));
+		store.setAlias(lastOpToShare.getAlias());
+		store.setSFile(new FileSpec(TEMP_FILE+tmpFileIter+System.currentTimeMillis(), funcSpec));
+		tmpFileIter++;
+		if(stores!=null && !stores.isEmpty()){
+			store.setInputSpec(stores.get(0).getInputSpec());
+		}
+        //store.setSignature(loStore.getSignature());
+        //store.setSortInfo(loStore.getSortInfo());
+        store.setIsTmpStore(false);
+        
+        
+		
+		//clone the store and add it to the plan to share
+        POStore storeClone=(POStore) store.clone();
+        sharedOperatorsPlan.addAsLeaf(storeClone);
+        //newMapperRootPlansPair.first=sharedOperatorsPlan;
+        this.addAsLeaf(store);
+		
+		//clone the last operator to share and add it to this plan after connecting it to the store
+        /*PhysicalOperator lastOpToShareClone=lastOpToShare.clone();
+        //add to the clone of lastOpToShare and the store to this paln
+        this.add(lastOpToShareClone);loadStorePlan
+        this.add(store);
+        this.connect(lastOpToShareClone, store);
+        //copy all the input of lastOpToShare to the new lastOpToShareClone
+        List<PhysicalOperator> lastOpToSharePreds=this.getPredecessors(lastOpToShare);
+        for(PhysicalOperator pred:lastOpToSharePreds){
+        	this.connect(pred,lastOpToShareClone);
+        }*/
+        
+        //empty this plan
+        /*this.trimAbove(lastOpToShare);
+        this.remove(lastOpToShare);
+        //create a load store plan
+		PhysicalPlan loadStorePlan = createLoadStorePlan(store,pigContext);
+		PhysicalOperator newStore= PlanHelper.getStores(loadStorePlan).get(0);
+		PhysicalOperator newLoad= PlanHelper.getLoads(loadStorePlan).get(0);
+		//this.add(newStore);
+		this.add(newLoad);*/
+		//this.connect(newLoad, newStore);
+		//add the load store plan to the new root plans
+		//newMapperRootPlansPair.second=null;
+		
+		//newMapperRootPlans.add(newMapperRootPlansPair);
+		
+		//return the plan to share
+		//return sharedOperatorsPlan;
+		return null;
+	}
+
+	private boolean hasStoreSuccessor(PhysicalOperator op) {
+		List<PhysicalOperator> opSuccs = this.getSuccessors(op); 
+		if(opSuccs==null || opSuccs.size()==0){
+			return false;
+		}
+		for(PhysicalOperator succ:opSuccs){
+			if(succ instanceof POStore){
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	private PhysicalPlan createPlan(POLoad load, PhysicalOperator lastOpToShare,
@@ -865,16 +979,18 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 		String scope = lastOpToShare.getOperatorKey().scope;
 		NodeIdGenerator nodeGen = NodeIdGenerator.getGenerator();
 		//List<POStore> stores = PlanHelper.getStores(this);
-		FuncSpec funcSpec=new FuncSpec(PigStorage.class.getName() + "()");
+		/*FuncSpec funcSpec=new FuncSpec(PigStorage.class.getName() + "()");
 		if(stores!=null && !stores.isEmpty()){
 			for(POStore astore:stores){
 				funcSpec=astore.getSFile().getFuncSpec();
 				break;
 			}
-		}
+		}*/
+		FuncSpec funcSpec=new FuncSpec(InterStorage.class.getName());
 		POStore store = new POStore(new OperatorKey(scope, nodeGen.getNextNodeId(scope)));
 		store.setAlias(lastOpToShare.getAlias());
-		store.setSFile(new FileSpec(TEMP_FILE+System.currentTimeMillis(), funcSpec));
+		store.setSFile(new FileSpec(TEMP_FILE+tmpFileIter+System.currentTimeMillis(), funcSpec));
+		tmpFileIter++;
 		if(stores!=null && !stores.isEmpty()){
 			store.setInputSpec(stores.get(0).getInputSpec());
 		}
@@ -895,7 +1011,7 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 	}
 
 	private PhysicalPlan splitPlan(POLoad load, PhysicalOperator lastOpToShare, PigContext pigContext,
-			List<POStore> stores, List<Pair<PhysicalPlan, PhysicalPlan>> newMapperRootPlans) throws PlanException, CloneNotSupportedException, VisitorException {
+			List<POStore> stores, List<POLoad> planLoads, List<Pair<PhysicalPlan, PhysicalPlan>> newMapperRootPlans) throws PlanException, CloneNotSupportedException, VisitorException {
 		
 		//initialize a pair to include the two created plans
 		Pair<PhysicalPlan, PhysicalPlan> newMapperRootPlansPair = new Pair<PhysicalPlan,PhysicalPlan>(null, null);
@@ -907,24 +1023,33 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 			succs.addAll(succsItr);
 		}
 		
+		List<POLoad> lastOpToShareDecLoads=new ArrayList<POLoad> ();
+		lastOpToShareDecLoads.add(load);
+		for(POLoad planLoad:planLoads){
+			if(!load.equals(planLoad) && isAncetorNode(planLoad, lastOpToShare)){
+				lastOpToShareDecLoads.add(planLoad);
+			}
+		}
 		
 		//PLAN: shared mapper
 		//copy the operators from load till this operator into a new plan, return the plan
-		PhysicalPlan sharedOperatorsPlan= createPlanFromLoadToOperator(load, lastOpToShare);
+		PhysicalPlan sharedOperatorsPlan= createPlanFromLoadToOperator(lastOpToShareDecLoads, lastOpToShare);
 		//add a store operator to that plan
 		String scope = lastOpToShare.getOperatorKey().scope;
 		NodeIdGenerator nodeGen = NodeIdGenerator.getGenerator();
 		//List<POStore> stores = PlanHelper.getStores(this);
-		FuncSpec funcSpec=new FuncSpec(PigStorage.class.getName() + "()");
+		/*FuncSpec funcSpec=new FuncSpec(PigStorage.class.getName() + "()");
 		if(stores!=null && !stores.isEmpty()){
 			for(POStore astore:stores){
 				funcSpec=astore.getSFile().getFuncSpec();
 				break;
 			}
-		}
+		}*/
+		FuncSpec funcSpec=new FuncSpec(InterStorage.class.getName());
 		POStore store = new POStore(new OperatorKey(scope, nodeGen.getNextNodeId(scope)));
 		store.setAlias(lastOpToShare.getAlias());
-		store.setSFile(new FileSpec(TEMP_FILE+System.currentTimeMillis(), funcSpec));
+		store.setSFile(new FileSpec(TEMP_FILE+tmpFileIter+System.currentTimeMillis(), funcSpec));
+		tmpFileIter++;
 		if(stores!=null && !stores.isEmpty()){
 			store.setInputSpec(stores.get(0).getInputSpec());
 		}
@@ -977,22 +1102,64 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 		return sharedOperatorsPlanClone;
 	}
 
-	private PhysicalPlan createPlanFromLoadToOperator(POLoad load,
+	private boolean isAncetorNode(PhysicalOperator ansOperator,
+			PhysicalOperator operator) {
+		if(ansOperator.equals(operator)){
+			return true;
+		}
+		List<PhysicalOperator> preds=this.getPredecessors(operator);
+		if(preds==null || preds.isEmpty()){
+			return false;
+		}else{
+			for(PhysicalOperator pred:preds){
+				if(isAncetorNode(ansOperator, pred)){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private PhysicalPlan createPlanFromLoadToOperator(List<POLoad> loads,
 			PhysicalOperator lastOpToShare) throws PlanException, CloneNotSupportedException {
 		PhysicalPlan newPlan=new PhysicalPlan();
-		moveOperatorAndSuccToPlan(load,lastOpToShare, newPlan);
+		List<PhysicalOperator> lastOpToShareClone = new ArrayList<PhysicalOperator>();
+		moveOperatorAndSuccToPlan(loads.get(0),lastOpToShare, newPlan, lastOpToShareClone);
+		for(int i=1;i<loads.size();i++){
+			moveOperatorAndSuccToPlan(loads.get(i),lastOpToShare, newPlan, lastOpToShareClone);
+		}
 		return newPlan;
 	}
 	
-	private PhysicalOperator moveOperatorAndSuccToPlan(PhysicalOperator operator, PhysicalOperator lastOpToShare, PhysicalPlan newPlan) throws PlanException, CloneNotSupportedException {
+	private PhysicalOperator moveOperatorAndSuccToPlan(PhysicalOperator operator, PhysicalOperator lastOpToShare, PhysicalPlan newPlan, List<PhysicalOperator> lastOperatorClone) throws PlanException, CloneNotSupportedException {
 		//add operator to new plan
+		PhysicalOperator operatorClone=null;
+		/*if(!copyClone){
+			operatorClone=operator.clone();
+			newPlan.add(operatorClone);
+			lastOperatorClone=operatorClone;
+		}else{
+			operatorClone=lastOperatorClone;
+		}
+		
 		PhysicalOperator operatorClone=operator.clone();
-		newPlan.add(operatorClone);
+		newPlan.add(operatorClone);*/
 		
 		if(operator.equals(lastOpToShare)){
 			//remove operator from this plan
 			//this.remove(operator);
+			if(lastOperatorClone.isEmpty()){
+				operatorClone=operator.clone();
+				newPlan.add(operatorClone);
+				lastOperatorClone.add(operatorClone);
+			}else{
+				operatorClone=lastOperatorClone.get(0);
+			}
 			return operatorClone;
+		}else{
+			operatorClone=operator.clone();
+			newPlan.add(operatorClone);
+			
 		}
 		//get successors of the operator
 		List<PhysicalOperator> succs=getSuccessors(operator);
@@ -1001,7 +1168,7 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 			List<PhysicalOperator> succsCopy=new ArrayList<PhysicalOperator>(succs);
 			for(PhysicalOperator succ:succsCopy){
 				//move operator and its successors to plan
-				PhysicalOperator succClone=moveOperatorAndSuccToPlan(succ,lastOpToShare, newPlan);
+				PhysicalOperator succClone=moveOperatorAndSuccToPlan(succ,lastOpToShare, newPlan, lastOperatorClone);
 				//move connections between op and succ to new plan
 				newPlan.connect(operatorClone,  succClone);		
 			}
@@ -1037,8 +1204,8 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 		NodeIdGenerator nodeGenStore = NodeIdGenerator.getGenerator();
 		POStore shareStore = new POStore(new OperatorKey(scope, nodeGenStore.getNextNodeId(scope)));
 		shareStore.setAlias(tmpStore.getAlias());
-		shareStore.setSFile(new FileSpec(SHARED_FILE+System.currentTimeMillis(), tmpStore.getSFile().getFuncSpec()));
-		
+		shareStore.setSFile(new FileSpec(SHARED_FILE+tmpFileIter+System.currentTimeMillis(), tmpStore.getSFile().getFuncSpec()));
+		tmpFileIter++;
 		//shareStore.setInputSpec(tmpStore.getInputSpec());
 		
         //store.setSignature(loStore.getSignature());
@@ -1087,7 +1254,111 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 	}
 
 	public static String getNewSharedStorageLocation() {
+		String newStoreLoc=SHARED_FILE+tmpFileIter+System.currentTimeMillis();
+		tmpFileIter++;
+		return newStoreLoc;
+	}
+
+	public void discoverUsefulSubplansReducer(PigContext pigContext,
+			Configuration conf, List<POStore> stores,
+			List<PhysicalPlan> newMapperRootPlans) throws PlanException, CloneNotSupportedException {
 		
-		return SHARED_FILE+System.currentTimeMillis();
+		//find the roots of this plan
+		List<PhysicalOperator> roots = new ArrayList<PhysicalOperator>(this.getRoots());
+		for(PhysicalOperator op: roots){
+			//insert a store after this operator
+			if(! (op instanceof POLoad) && ! (op instanceof POStore)  && ! hasStoreSuccessor(op)){
+				splitReducerPlan(op, newMapperRootPlans, pigContext, stores);
+			}
+		}
+		
+	}
+
+	private void splitReducerPlan(PhysicalOperator op,
+			List<PhysicalPlan> newMapperRootPlans,PigContext pigContext, List<POStore> stores ) throws PlanException, CloneNotSupportedException {
+		//create a new store
+		String scope = op.getOperatorKey().scope;
+		NodeIdGenerator nodeGen = NodeIdGenerator.getGenerator();
+		//List<POStore> stores = PlanHelper.getStores(this);
+		/*FuncSpec funcSpec=new FuncSpec(PigStorage.class.getName() + "()");
+		if(stores!=null && !stores.isEmpty()){
+			for(POStore astore:stores){
+				funcSpec=astore.getSFile().getFuncSpec();
+				break;
+			}
+		}*/
+		FuncSpec funcSpec=new FuncSpec(InterStorage.class.getName());
+		POStore store = new POStore(new OperatorKey(scope, nodeGen.getNextNodeId(scope)));
+		store.setAlias(op.getAlias());
+		store.setSFile(new FileSpec(SHARED_FILE+tmpFileIter+System.currentTimeMillis(), funcSpec));
+		tmpFileIter++;
+		if(stores!=null && !stores.isEmpty()){
+			store.setInputSpec(stores.get(0).getInputSpec());
+		}
+		
+		//for each succ of op, create a new plan
+		List<PhysicalOperator> succs=getSuccessors(op);
+		if(succs!=null){
+			List<PhysicalOperator> succCopy=new ArrayList<PhysicalOperator>(succs);
+			for(PhysicalOperator succ:succCopy){
+				PhysicalPlan newPlan=new PhysicalPlan();
+				PhysicalOperator succClone = moveOpsFromLastSharedToLeaf(succ,newPlan);
+				//create load and add it to plan
+				NodeIdGenerator nodeGenLoad = NodeIdGenerator.getGenerator();
+				
+				FileSpec lFile=store.getInputSpec();
+				POLoad tmpLoad = new POLoad(new OperatorKey(scope, nodeGenLoad
+		                .getNextNodeId(scope)), lFile);
+				tmpLoad.setLFile(store.getSFile());
+				tmpLoad.setPc(pigContext);
+				tmpLoad.setResultType(store.getResultType());
+				String aliasOfLastOpToShare=op.getAlias();
+				if(aliasOfLastOpToShare!=null){
+					tmpLoad.setAlias(aliasOfLastOpToShare);
+				}
+				newPlan.add(tmpLoad);
+				newPlan.connect(tmpLoad, succClone);
+				newMapperRootPlans.add(newPlan);
+			}
+		}
+		
+		//add store to this plan
+		this.addAsLeaf(store);
+		
+	}
+
+	private PhysicalPlan createPlanFromLastSharedToLeaf(PhysicalOperator op) {
+		
+		return null;
+	}
+	
+
+	private PhysicalOperator moveOpsFromLastSharedToLeaf(PhysicalOperator operator, PhysicalPlan newPlan) throws CloneNotSupportedException, PlanException {
+		
+		if(operator==null){
+			return null;
+		}
+		PhysicalOperator operatorClone=null;
+		operatorClone=operator.clone();
+		newPlan.add(operatorClone);
+		
+		//get successors of the operator
+		List<PhysicalOperator> succs=getSuccessors(operator);
+		//move every succ and its succs into the new plan and then copy their connections as well
+		if(succs!=null){
+			if(succs!=null && !succs.isEmpty()){
+				List<PhysicalOperator> succsCopy=new ArrayList<PhysicalOperator>(succs);
+				for(PhysicalOperator succ:succsCopy){
+					//move operator and its successors to plan
+					PhysicalOperator succClone=moveOpsFromLastSharedToLeaf(succ, newPlan);
+					//move connections between op and succ to new plan
+					newPlan.connect(operatorClone,  succClone);		
+				}
+			}
+		}
+		//remove operator from this plan
+		this.remove(operator);
+		
+		return operatorClone;
 	}
 }

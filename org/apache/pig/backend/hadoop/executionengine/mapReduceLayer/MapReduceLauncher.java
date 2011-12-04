@@ -94,6 +94,8 @@ public class MapReduceLauncher extends Launcher{
     //@iman
 	private static final String OPTIMIZE_BY_SHARING = "sharing.reuseoutputs";
 	public static final String DEBUGINFO_DETAILED = "debuginfo.printplans";
+	//@iman
+	public static final String DISCOVER_NEWPLANS_HEURISTICS = "sharing.useHeuristics.discoverPlans";
 	//public static final String OPTIMIZE_SHARING_OPERATORS = "sharing.discover.sharedOps";
 	
     
@@ -140,6 +142,30 @@ public class MapReduceLauncher extends Launcher{
         
         JobControlCompiler jcc = new JobControlCompiler(pc, conf,isOptimizeBySharing);
         
+        boolean isUseDiscovePlanHeuristics=conf.getBoolean(DISCOVER_NEWPLANS_HEURISTICS, false);
+        
+        if(!isUseDiscovePlanHeuristics){
+        	//@iman find sharing opportunities in mrp
+        	List<MapReduceOper> roots = new LinkedList<MapReduceOper>();
+            roots.addAll(mrp.getRoots());
+        	jcc.findSharingOpportunities(mrp, roots);
+        
+        	//@iman inject stores to preserve plans 
+        	jcc.injectSores(mrp, roots);
+        	
+        	boolean isMoreDebugInfo=conf.getBoolean(DEBUGINFO_DETAILED, false);
+        	if(isMoreDebugInfo){
+    	        boolean verbose = true;
+    	        PrintStream ps=System.out;
+    	        ps.println("#--------------------------------------------------");
+    	        ps.println("# Map Reduce Plan after finding sharing opportunities and injecting extra stores                             ");
+    	        ps.println("#--------------------------------------------------");
+    	        MRPrinter printer = new MRPrinter(ps, mrp);
+    	        printer.setVerbose(verbose);
+    	        printer.visit();
+            }
+        }
+        
         // start collecting statistics
         PigStatsUtil.startCollection(pc, jobClient, jcc, mrp); 
         
@@ -158,6 +184,7 @@ public class MapReduceLauncher extends Launcher{
         
         boolean stop_on_failure = 
             pc.getProperties().getProperty("stop.on.failure", "false").equals("true");
+        
         
         //@iman a map to keep track of the assigned job id in the jcc and the job exec id 
         Map<String,String> jcJobIdMap=new HashMap<String,String>(); 

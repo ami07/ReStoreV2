@@ -857,6 +857,24 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 		
 	}
 
+  	public static List<POStore> getStores(MapReduceOper mrplan) throws VisitorException{
+  		POStore store=null;
+		PhysicalPlan planWithFinalStore=null;
+		if(mrplan.reducePlan!=null && !mrplan.reducePlan.isEmpty()){
+			planWithFinalStore=mrplan.reducePlan;
+		}else{
+			planWithFinalStore=mrplan.mapPlan;
+		}
+		//get the list of stores from the plan
+		List<POStore> stores = PlanHelper.getStores(planWithFinalStore);
+		if(stores==null || stores.isEmpty()){
+			//no stores available
+			return null;
+		}else{
+			return stores;
+			
+		}
+  	}
   	/**
   	 * discover sub plans to share by adding a split and store tmp data after a filter or foreach
   	 * that makes substantial change
@@ -885,9 +903,9 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 		}
 		
 		//get the reducer
-		if(!reducePlan.isEmpty()){
-			
-		}
+		//if(reducePlan!=null && !reducePlan.isEmpty()){
+			//Vector<PhysicalPlan> subMapPlansToShare = reducePlan.discoverUsefulSubplans(pigContext, conf,stores);
+		//}
 		//get the mapper
 		if(!mapPlan.isEmpty()){
 			
@@ -917,9 +935,11 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 				PhysicalPlan newSplitterPlan=newPlanPair.first;
 				PhysicalPlan newLoadStorePlan=newPlanPair.second;
 				
-				if(newSplitterPlan!=null && !newSplitterPlan.isEmpty() && newLoadStorePlan!=null && !newLoadStorePlan.isEmpty()){
-					//create the MR splitter op  an add it to the MR plan
-					MapReduceOper newMRPlan=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
+				//create the MR splitter op  an add it to the MR plan
+				MapReduceOper newMRPlan=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
+				if(newSplitterPlan!=null && !newSplitterPlan.isEmpty()){
+					
+					
 					if(newMRPlan!=null){
 						newMRPlan.mapPlan=newSplitterPlan;
 						newMRPlan.setSplitter(true);
@@ -929,8 +949,9 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 						mrplan.add(newMRPlan);
 						mrplan.connect(newMRPlan, this);
 					}
+				}
 					
-					
+				if(newSplitterPlan!=null && !newSplitterPlan.isEmpty() && newLoadStorePlan!=null && !newLoadStorePlan.isEmpty()){	
 					//create the MR loadStore op and it it to the MR Plan
 					MapReduceOper newMRLoadStore=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
 					if(newLoadStorePlan!=null && newMapperRootPlans.size()<=1){
@@ -965,7 +986,7 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 					//newMRRootPlans.add(newMRPlan);
 				}
 				//connect the m/r plans with this m/r plan
-				mrplan.add(newMRPlan);
+				mrplan.add(newMRPlan);newMapperRootPlans
 				mrplan.connect(newMRPlan, this);
 				
 				//create the MR loadStore op and it it to the MR Plan
@@ -985,7 +1006,143 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 		return subPlansToShare;
 	}
   	
+	public void discoverUsefulSubplans(PigContext pigContext, Configuration conf, MROperPlan mrplan) throws VisitorException, PlanException, CloneNotSupportedException{
+		
+		//get stores of this plan
+		List<POStore> stores=null;
+		if(!reducePlan.isEmpty()){
+			stores=PlanHelper.getStores(reducePlan);
+		}else if(!mapPlan.isEmpty()){
+			stores=PlanHelper.getStores(mapPlan);
+		}else{
+			stores=new ArrayList<POStore>();
+		}
+		
+		if(!mapPlan.isEmpty()){
+			//List<POLoad> loads=PlanHelper.getLoads(mapPlan);
+			
+			for(;;){
+				
+				
+				List<MapReduceOper> mrPreds = mrplan.getPredecessors(this);
+				
+				//List <MapReduceOper> newMRRootPlans=new ArrayList();
+				List <Pair<PhysicalPlan, PhysicalPlan>> newMapperRootPlans=new ArrayList<Pair<PhysicalPlan, PhysicalPlan>>();
+				mapPlan.discoverUsefulSubplans(pigContext, conf,stores,  newMapperRootPlans);
+				
+				//create m/r plans for the new mapper root plans
+				for(Pair<PhysicalPlan, PhysicalPlan> newPlanPair:newMapperRootPlans){
+					PhysicalPlan newSplitterPlan=newPlanPair.first;
+					PhysicalPlan newLoadStorePlan=newPlanPair.second;
+					
+					if(newSplitterPlan!=null && !newSplitterPlan.isEmpty()){
+						//create the MR splitter op  an add it to the MR plan
+						MapReduceOper newMRPlan=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
+						if(newMRPlan!=null){
+							newMRPlan.mapPlan=newSplitterPlan;
+							newMRPlan.setSplitter(true);
+							//newMRRootPlans.add(newMRPlan);
+							
+							//add the new m/r plan
+							mrplan.add(newMRPlan);
+							if(newLoadStorePlan==null){
+								//List<MapReduceOper> mrPreds = mrplan.getPredecessors(this);
+								for(MapReduceOper pred:mrPreds){
+									mrplan.insertBetween(pred, newMRPlan, this);
+								}
+							}else{
+								//List<MapReduceOper> mrPreds = mrplan.getPredecessors(this);
+								if(mrPreds==null || mrPreds.isEmpty()){
+									//connect the m/r plans with this m/r plan
+									mrplan.connect(newMRPlan, this);
+								}else{
+									for(MapReduceOper pred:mrPreds){
+										mrplan.insertBetween(pred, newMRPlan, this);
+									}
+								}
+							}
+						}
+					}
+					
+					if(newSplitterPlan!=null && !newSplitterPlan.isEmpty() && newLoadStorePlan!=null && !newLoadStorePlan.isEmpty()){
+						
+						//create the MR loadStore op and it it to the MR Plan
+						MapReduceOper newMRLoadStore=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
+						if(newLoadStorePlan!=null && newMapperRootPlans.size()<=1){
+							//newMRLoadStore.mapPlan=newLoadStorePlan;
+							//newMRLoadStore.setSplitter(true);
+							//newMRRootPlans.add(newMRLoadStore);
+							
+							//connect the m/r plans with this m/r plan
+							//mrplan.add(newMRLoadStore);
+							//mrplan.connect(newMRPlan, newMRLoadStore);
+							mapPlan.replaceTmpLoadWithSharedStorage(newSplitterPlan,newLoadStorePlan);
+						}else{
+							//replace the tmpStorage with the sharedStorage from newLoadStorePlan
+							mapPlan.replaceTmpLoadWithSharedStorage(newSplitterPlan,newLoadStorePlan);
+						}
+						
+					}
+				}
+				
+				if(newMapperRootPlans.size()==0){
+					break;
+				}
+			}
+		}
+	}
 
+	public void discoverUsefulSubplansReducer(PigContext pigContext, Configuration conf, MROperPlan mrplan) throws VisitorException, PlanException, CloneNotSupportedException{
+		
+		//get stores of this plan
+		List<POStore> stores=null;
+		if(!reducePlan.isEmpty()){
+			stores=PlanHelper.getStores(reducePlan);
+		}else if(!mapPlan.isEmpty()){
+			stores=PlanHelper.getStores(mapPlan);
+		}else{
+			stores=new ArrayList<POStore>();
+		}
+		
+		if(!this.reducePlan.isEmpty()){
+			
+			//for(;;){
+				List<MapReduceOper> mrSuccs = mrplan.getSuccessors(this);
+				List <PhysicalPlan> newMapperRootPlans=new ArrayList<PhysicalPlan>();
+				reducePlan.discoverUsefulSubplansReducer(pigContext, conf,stores,  newMapperRootPlans);
+				
+				//create m/r plans for the new mapper root plans
+				for(PhysicalPlan newSplitterPlan:newMapperRootPlans){
+					
+					
+					if(newSplitterPlan!=null && !newSplitterPlan.isEmpty()){
+						//create the MR splitter op  an add it to the MR plan
+						MapReduceOper newMRPlan=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
+						if(newMRPlan!=null){
+							newMRPlan.mapPlan=newSplitterPlan;
+							newMRPlan.setSplitter(true);
+							//newMRRootPlans.add(newMRPlan);
+							
+							//add the new m/r plan
+							mrplan.add(newMRPlan);
+							
+							if(mrSuccs==null || mrSuccs.isEmpty()){
+								//connect the m/r plans with this m/r plan
+								mrplan.connect(this, newMRPlan);
+							}else{
+								for(MapReduceOper succ:mrSuccs){
+									mrplan.insertBetween(this, newMRPlan, succ);
+								}
+							}
+						}
+					}
+				}
+				//if(newMapperRootPlans.size()==0){
+					//break;
+				//}
+			//}
+		}
+	}
 	/**
   	 * discover sub plans to share by adding a split and store tmp data after a filter or foreach
   	 * that makes substantial change
