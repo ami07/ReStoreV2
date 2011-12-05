@@ -88,7 +88,33 @@ public abstract class OperatorPlan<E extends Operator> implements Iterable<E>, S
         mSoftFromEdges = new MultiMap<E, E>();
         mSoftToEdges = new MultiMap<E, E>();
     }
-
+    
+    public OperatorPlan(OperatorPlan copyPlan) {
+        mRoots = new ArrayList<E>();
+        mLeaves = new ArrayList<E>();
+        mOps = new HashMap<E, OperatorKey>(copyPlan.mOps);
+        mKeys = new HashMap<OperatorKey, E>(copyPlan.mKeys);
+        mFromEdges = new MultiMap<E, E>(copyPlan.mFromEdges);
+        mToEdges = new MultiMap<E, E>(copyPlan.mToEdges);
+        mSoftFromEdges = new MultiMap<E, E>(copyPlan.mSoftFromEdges);
+        mSoftToEdges = new MultiMap<E, E>(copyPlan.mSoftToEdges);
+    }
+    
+    /**
+     * resets all the fiels of this class
+     * @author iman
+     */
+    public void resetPlan() {
+        mRoots = new ArrayList<E>();
+        mLeaves = new ArrayList<E>();
+        mOps = new HashMap<E, OperatorKey>();
+        mKeys = new HashMap<OperatorKey, E>();
+        mFromEdges = new MultiMap<E, E>();
+        mToEdges = new MultiMap<E, E>();
+        mSoftFromEdges = new MultiMap<E, E>();
+        mSoftToEdges = new MultiMap<E, E>();
+    }
+    
     /**
      * Get a list of all nodes in the graph that are roots.  A root is defined to
      * be a node that has no input.

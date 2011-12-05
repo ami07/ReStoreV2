@@ -54,7 +54,16 @@ public class MultiMap<K, V> implements Serializable {
         mMap = new HashMap<K, ArrayList<V>>(size);
     }
 
-    /**
+    public MultiMap(MultiMap<K, V> copyMap) {
+    	mMap = new HashMap<K, ArrayList<V>>(copyMap.size());
+    	Set<K> copyKeys = copyMap.keySet();
+    	for(K key:copyKeys){
+    		Collection<V> value=copyMap.get(key);
+    		put(key, value);
+    	}
+	}
+
+	/**
      * Add an element to the map.
      * @param key The key to store the value under.  If the key already
      * exists the value will be added to the collection for that key, it

@@ -97,7 +97,11 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
         super();
     }
     
-    public void attachInput(Tuple t){
+    public PhysicalPlan(PhysicalPlan copyPlan) {
+    	super(copyPlan);
+	}
+
+	public void attachInput(Tuple t){
         List<PhysicalOperator> roots = getRoots();
         for (PhysicalOperator operator : roots) {
             operator.attachInput(t);
@@ -1360,5 +1364,20 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 		this.remove(operator);
 		
 		return operatorClone;
+	}
+
+	/**
+	 * emty a physical plan from all of its operators
+	 * @author ielghand
+	 */
+	public void emptyPlan() {
+		Map<OperatorKey, PhysicalOperator> operatorsMap = new HashMap<OperatorKey, PhysicalOperator>(this.getKeys());
+		Collection<PhysicalOperator> operators = new ArrayList<PhysicalOperator> (operatorsMap.values());
+		for(PhysicalOperator op:operators){
+			this.remove(op);
+		}
+		
+		//reset all the fields of this plan
+		resetPlan();
 	}
 }

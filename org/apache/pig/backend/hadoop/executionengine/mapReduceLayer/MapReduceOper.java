@@ -54,7 +54,8 @@ import org.apache.pig.impl.util.Pair;
  */
 public class MapReduceOper extends Operator<MROpPlanVisitor> {
     private static final long serialVersionUID = 1L;
-
+    //@iman
+	public static final String DISCOVER_NEWPLANS_HEURISTICS = "sharing.useHeuristics.discoverPlans";
     //The physical plan that should be executed
     //in the map phase
     public PhysicalPlan mapPlan;
@@ -600,8 +601,9 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 
 	/**
 	 * @author iman
+	 * @throws CloneNotSupportedException 
      */
-  public MapReduceOper getPlanRecplacedWithView(MapReduceOper otherOP, PigContext pigContext) throws PlanException, VisitorException {
+  public MapReduceOper getPlanRecplacedWithView(MapReduceOper otherOP, PigContext pigContext) throws PlanException, VisitorException, CloneNotSupportedException {
 		if(this.getClass().equals(otherOP.getClass())){
 			//the two operators are of the same class
 			if((otherOP.reducePlan!=null && reducePlan!=null) && (!otherOP.reducePlan.isEmpty() && !reducePlan.isEmpty())){
@@ -669,6 +671,15 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 								//we replace the last matched operator with a load from the shared plan o/p location and 
 								//we still need to run this job
 								reducePlan.replaceOperatorWithLoad(matchedOperator,otherPlanStoreToBeused,pigContext);
+								
+								//since the matching is up to the reducer, and now the mapper is empty.. 
+								//we need to move the reducer to the mapper and delete the combiner if it exists
+								
+								mapPlan.emptyPlan();
+								mapPlan=reducePlan.clone();//new PhysicalPlan(reducePlan);
+								combinePlan.emptyPlan();
+								reducePlan.emptyPlan();
+								
 								return this;
 							}
 						}else{
@@ -950,11 +961,11 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 						mrplan.connect(newMRPlan, this);
 					}
 				}
-					
+				boolean isUseDiscovePlanHeuristics=conf.getBoolean(DISCOVER_NEWPLANS_HEURISTICS, false);	
 				if(newSplitterPlan!=null && !newSplitterPlan.isEmpty() && newLoadStorePlan!=null && !newLoadStorePlan.isEmpty()){	
 					//create the MR loadStore op and it it to the MR Plan
 					MapReduceOper newMRLoadStore=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
-					if(newLoadStorePlan!=null && newMapperRootPlans.size()<=1){
+					if(newLoadStorePlan!=null && newMapperRootPlans.size()<=1 && isUseDiscovePlanHeuristics){
 						newMRLoadStore.mapPlan=newLoadStorePlan;
 						//newMRLoadStore.setSplitter(true);
 						//newMRRootPlans.add(newMRLoadStore);
@@ -1120,7 +1131,15 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 						MapReduceOper newMRPlan=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
 						if(newMRPlan!=null){
 							newMRPlan.mapPlan=newSplitterPlan;
-							newMRPlan.setSplitter(true);
+							/*newMRPlan.reducePlan=newSplitterPlan;
+							List<PhysicalOperator> loads = new ArrayList<PhysicalOperator>(newMRPlan.reducePlan.getRoots());
+							if(loads!=null){
+								for(PhysicalOperator op:loads){
+									newMRPlan.mapPlan.add(op);
+									newMRPlan.reducePlan.remove(op);
+								}
+							}*/
+							//newMRPlan.setSplitter(true);
 							//newMRRootPlans.add(newMRPlan);
 							
 							//add the new m/r plan
