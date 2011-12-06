@@ -886,6 +886,18 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 			
 		}
   	}
+  	
+  	public static List<String> getStoreLocs(MapReduceOper mrplan) throws VisitorException{
+  		List<POStore> stores= getStores(mrplan);
+  		List<String> storeLocs=new ArrayList<String>();
+  		if(stores!=null){
+	  		for(POStore store:stores){
+	  			String storeLoc=store.getSFile().getFileName();
+	  			storeLocs.add(storeLoc);
+	  		}
+  		}
+  		return storeLocs;
+  	}
   	/**
   	 * discover sub plans to share by adding a split and store tmp data after a filter or foreach
   	 * that makes substantial change

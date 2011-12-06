@@ -97,6 +97,7 @@ import org.apache.pig.impl.io.PigNullableWritable;
 import org.apache.pig.impl.plan.DepthFirstWalker;
 import org.apache.pig.impl.plan.OperatorKey;
 import org.apache.pig.impl.plan.OperatorPlan;
+import org.apache.pig.impl.plan.PlanException;
 import org.apache.pig.impl.plan.VisitorException;
 import org.apache.pig.impl.util.JarManager;
 import org.apache.pig.impl.util.ObjectSerializer;
@@ -660,7 +661,7 @@ public class JobControlCompiler{
 			                //sharedPlans.add(candidateSharedPlan);
 			                //candidatePlansToShare.put(jobID, mro);
 			                SharedMapReducePlan candidateSharedPlan=null;
-			                if(dependingCandidateSharedPlan!=null){
+			                if(dependingCandidateSharedPlan!=null && hasSameStoreLoc(dependingCandidateSharedPlan.getMRPlan(), mro)){
 			                	candidateSharedPlan=new SharedMapReducePlan(dependingCandidateSharedPlan);
 			                	dependingCandidateSharedPlan=null;
 			                	//get the shared plan
@@ -932,7 +933,9 @@ public class JobControlCompiler{
         			                //if we keep whole plans
         			                if(isOptimizeBySharingWholePlan && (firstIter || !isUseDiscovePlanHeuristics) && ! hasFinalStore(mroToShare)){
         			                	//dependingCandidateSharedPlan=new SharedMapReducePlan(mroToShare,null,null);
-        			                	dependingCandidateSharedPlan.setJobForInputInfo(jobID);
+        			                	if(hasSameStoreLoc(dependingCandidateSharedPlan.getMRPlan(),newRootPlan )){
+        			                		dependingCandidateSharedPlan.setJobForInputInfo(jobID);
+        			                	}
         			                }
         	                    }
             				}
@@ -991,6 +994,133 @@ public class JobControlCompiler{
         //firstIter=false;
         
         return jobCtrl;
+    }
+    
+    private boolean hasSameStoreLoc(MapReduceOper firstPlan, MapReduceOper secondPlan) throws VisitorException {
+    	//get stores of first plan
+    	List<String> firstPlanStores = MapReduceOper.getStoreLocs(firstPlan);
+    	List<String> secondPlanStores = MapReduceOper.getStoreLocs(secondPlan);
+    	
+    	for(String storeInFirstPlan:firstPlanStores){
+    		if(!secondPlanStores.contains(storeInFirstPlan)){
+    			return false;
+    		}
+    	}
+		return true;
+	}
+
+	private boolean rewriteQueryUsingSharedPlans(MROperPlan plan, MapReduceOper mro, Vector<SharedMapReducePlan>sharedPlans) throws CloneNotSupportedException, IOException{
+    	 boolean noExecForMRO=false;
+    	 
+    	for(SharedMapReducePlan sharedPlan: sharedPlans){
+    		MapReduceOper sharedMRPlan=sharedPlan.getMRPlan();
+    		MapReduceOper planReplacedWithView=null;
+    		if(sharedMRPlan.isEquivalent(mro)){
+				System.out.println("Found an equivalent view to this plan");
+				//get the successor MR plan for mro
+				List<MapReduceOper> successorMROs = plan.getSuccessors(mro);
+				if(successorMROs==null|| successorMROs.size()<=0){
+					//there are no successors to this plan, we only need to have a special condition to copy the 
+					//o/p to the new location and terminate
+					//TODO
+					log.info("Found an exact match view");
+					//check if the output of this job currently exist
+					
+				}else{
+    				//update successor MR plans with the new load replacing the old tmp one
+    				for (MapReduceOper successorMRO: successorMROs) {
+    					successorMRO.updateLoadOperator(mro,sharedMRPlan);
+    				}
+				}
+				//@iman remove this plan from the list of plans
+				//plan.trimBelow(mro);
+	            plan.remove(mro);
+	            
+				noExecForMRO=true;
+				//@iman set the first iter to be false as at least one iter has been performed
+		        firstIter=false;
+				//bestSharedPlanSoFar=null; //make sure it is null, so we will not execute that parts that handles shared plans again
+				break;
+			}else{
+				//the plan is not equivalent with the view, check if it is subset of it
+				planReplacedWithView=mro.getPlanRecplacedWithView(sharedMRPlan,pigContext);
+				if(planReplacedWithView!=null ){//&& (bestSharedPlanSoFar==null || sharedPlan.isBetterPlan(bestSharedPlanSoFar))
+					System.out.println("Found an view that is a subset of this plan");
+					//get the successor MR plan for mro
+    				List<MapReduceOper> successorMROs = plan.getSuccessors(mro);
+    				if(planReplacedWithView==null){
+    					continue;
+    				}else if(planReplacedWithView==sharedMRPlan){
+    					//the new plan is the same as the shared plan after changing the store location
+    					if(successorMROs==null|| successorMROs.size()<=0){
+    						// only copy the files in the old store location to the new one
+    						log.info("To copy the files from the old location to the new one");
+    						POStore sharedPlanStoreLoc=sharedMRPlan.getStore(sharedMRPlan);//getPlanFinalStoreLocation(sharedMRPlan);
+    						POStore newPlanStoreLoc=mro.getStore(mro);//getPlanFinalStoreLocation(mro);
+    						copyResultLocations(sharedPlanStoreLoc,newPlanStoreLoc);
+    						//@iman remove this plan from the list of plans
+            				//plan.trimBelow(mro);
+            	            plan.remove(mro);
+    						//set flag that we will not exec mro
+    						noExecForMRO=true;
+    						//@iman set the first iter to be false as at least one iter has been performed
+    				        firstIter=false;
+    					}else{
+    						log.info("To update successor MR plans by merging the new mro into their maps");
+	        				//update successor MR plans by merging the new mro into their maps
+	        				for (int i=0;i<successorMROs.size();i++) {
+	        					MapReduceOper successorMRO= successorMROs.get(i);
+	        					//TODO replace the load operator with the location of store operator from shared plan
+	        					if(successorMRO.updateLoadOperator(mro,sharedMRPlan)==true){
+	        						//@iman remove this plan from the list of plans
+                    				//plan.trimBelow(mro);
+                    	            plan.remove(mro);
+	        						//set flag that we will not exec mro
+	        						noExecForMRO=true;
+	        						//@iman set the first iter to be false as at least one iter has been performed
+	        				        firstIter=false;
+	        					}
+	        				}
+	        				
+        				}
+    					break;
+    				}else{
+    					log.info("the differences in the shared plan and the new plan are more than store location ");
+    					log.info("the shared plan is subsumed in this plan");
+    					log.info("therefore, we replace the last shared op with a load from the store loc of the shared plan");
+    					log.info("the new rewritten plan is executed and nothing will be changed for subsecuent MR plans");
+    					//store info about sharedPlan bytes read and execution time
+    					//sharedPlanBytesRead=sharedPlan.getHdfsBytesRead();
+    					//sharedPlanAvgTime=sharedPlan.getAvgPlanTime();
+    					//the differences in the shared plan and the new plan are more than store location
+    					//print the shared plan that is used for rewritting the query
+        				if(this.isMoreDebugInfo){
+            				boolean verbose = true;
+                    		PrintStream ps=System.out;
+                            ps.println("#--------------------------------------------------");
+                            ps.println("# The plan that we will use to rewrite the query:  ");
+                            ps.println("#--------------------------------------------------");
+                            MROperPlan execPlan= new MROperPlan();
+                            execPlan.add(sharedMRPlan);
+                            MRPrinter printer = new MRPrinter(ps, execPlan);
+                            printer.setVerbose(verbose);
+                            try {
+                				printer.visit();
+                			} catch (VisitorException e) {
+                				log.warn("Unable to print shared plan", e);
+                			}
+        				}
+        				//we need to start matching from the begining
+    					Vector<SharedMapReducePlan>sharedPlansCopy=new Vector<SharedMapReducePlan>(sharedPlans);
+    					sharedPlansCopy.remove(sharedPlan);
+    					return rewriteQueryUsingSharedPlans(plan, mro, sharedPlansCopy);
+    				}
+    				
+    				//break;
+				}//end if the shared plan is subset of the plan i am currently executing
+			}
+    	}//end for every shared plan
+    	return noExecForMRO;
     }
     
     private boolean hasFinalStore(MapReduceOper mroToShare) throws VisitorException {
@@ -2139,7 +2269,7 @@ public class JobControlCompiler{
 	            }
 	            
 	            if(this.isOptimizeBySharing){
-	            	for(SharedMapReducePlan sharedPlan: sharedPlans){
+	            	/*for(SharedMapReducePlan sharedPlan: sharedPlans){
 	            		MapReduceOper sharedMRPlan=sharedPlan.getMRPlan();
 	            		MapReduceOper planReplacedWithView=null;
 	            		boolean noExecForMRO=false;
@@ -2228,21 +2358,7 @@ public class JobControlCompiler{
 	            					//sharedPlanAvgTime=sharedPlan.getAvgPlanTime();
 	            					//the differences in the shared plan and the new plan are more than store location
 	            					
-		            				/*if(successorMROs==null|| successorMROs.size()<=0){
-		            					//mro will remain as it is, except that we will need to adjust the operators
-		            					//to move them to the map instead of reduce plan
-		            					//TODO
-		            				}else{
-		    	        				//update successor MR plans by merging the new mro into their maps
-		    	        				for (MapReduceOper successorMRO: successorMROs) {
-		    	        					if(successorMRO.updateLoadOperator(mro,sharedMRPlan)==true){
-		    	        						//set flag that we will not exec mro
-		    	        						//TODO look at this and make sure that this is intended to be that way!
-		    	        						//noExecForMRO=true;
-		    	        					}
-		    	        				}
-		    	        				
-		            				}*/
+		            				
 	            					if(successorMROs!=null && successorMROs.size()>0){
 	            						sucessorAllMROs.addAll(successorMROs);
 	            					}
@@ -2267,7 +2383,9 @@ public class JobControlCompiler{
 		        				//break;
 	        				}//end if the shared plan is subset of the plan i am currently executing
 	        			}//end if we could not find an equivalent view and therefore we try to make a replacement using the shared plan 
-	            	}//end for every shared plan
+	            	}//end for every shared plan*/
+	            	
+	            	this.rewriteQueryUsingSharedPlans(plan, mro, sharedPlans);
 				}//is optimize by sharing
 	            
 	        }
