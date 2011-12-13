@@ -164,9 +164,11 @@ public class JobControlCompiler{
     //@iman
     public static final String DEBUGINFO_DETAILED = "debuginfo.printplans";
     public static final String DISCOVER_NEWPLANS = "sharing.discoverPlans";
+    public static final String DISCOVER_NEWPLANS_REDUCER = "sharing.discoverPlansReducer";
     private static final String OPTIMIZE_BY_SHARING_PLANS = "sharing.plan.reuseoutputs";
     public static final String DISCOVER_NEWPLANS_HEURISTICS = "sharing.useHeuristics.discoverPlans";
     public static final String DISCOVER_NEWPLANS_HEURISTICS_REDUCER = "sharing.useHeuristics.discoverPlans.reducer";
+    public static final String DISCOVER_NEWPLANS_EXCEPTLAST = "sharing.discoverPlans.exceptLast";
     
     // A mapping of job to pair of store locations and tmp locations for that job
     private Map<Job, Pair<List<POStore>, Path>> jobStoreMap;
@@ -181,11 +183,13 @@ public class JobControlCompiler{
 	private boolean isOptimizeBySharingWholePlan;
 	private boolean isMoreDebugInfo;
 	private boolean isDiscoverNewPlansOn;
+	private boolean isDiscoverNewPlansReducerOn;
 	private boolean isUseDiscovePlanHeuristics;
 	private boolean isUseDiscovePlanHeuristicsReducer;
     private SharedMapReducePlan dependingCandidateSharedPlan=null;
 	private boolean firstIter;
 	private Map<Job,Pair<String,String>>  jobSharedStoreMap;
+	private boolean isDiscovePlanExceptLastPlan;
     
     public JobControlCompiler(PigContext pigContext, Configuration conf, boolean isOptimizeBySharing) throws IOException {
         this.pigContext = pigContext;
@@ -199,9 +203,10 @@ public class JobControlCompiler{
         this.isOptimizeBySharingWholePlan=conf.getBoolean(OPTIMIZE_BY_SHARING_PLANS, false);
         this.isMoreDebugInfo=conf.getBoolean(DEBUGINFO_DETAILED, false);
         this.isDiscoverNewPlansOn=conf.getBoolean(DISCOVER_NEWPLANS, false);
+        this.isDiscoverNewPlansReducerOn=conf.getBoolean(DISCOVER_NEWPLANS_REDUCER, false);
         this.isUseDiscovePlanHeuristics=conf.getBoolean(DISCOVER_NEWPLANS_HEURISTICS, false);
         this.isUseDiscovePlanHeuristicsReducer=conf.getBoolean(DISCOVER_NEWPLANS_HEURISTICS_REDUCER, false);
-        
+        this.isDiscovePlanExceptLastPlan=conf.getBoolean(DISCOVER_NEWPLANS_EXCEPTLAST, false);
         //@iman:load the m/r views
         if(this.isOptimizeBySharing){
 	        try {
@@ -593,7 +598,7 @@ public class JobControlCompiler{
             		Vector<SharedMapReducePlan> candidateSubPlansToShare=new Vector<SharedMapReducePlan>();
             		List <MapReduceOper> newMRRootPlans=new ArrayList<MapReduceOper>();
             		List<MapReduceOper> subPlansToShare=new ArrayList<MapReduceOper>();
-            		if(isDiscoverNewPlansOn){
+            		if(isDiscoverNewPlansOn && !(isDiscovePlanExceptLastPlan && hasFinalStore(mro))){
 	            		//@iman discover new potential useful subplans that we can share
 	        			subPlansToShare=mro.discoverUsefulSubplans(pigContext, conf, this.plan,newMRRootPlans);
 	        			//candidateSubPlansToShare=new Vector<SharedMapReducePlan>(subPlansToShare.size());
@@ -655,8 +660,8 @@ public class JobControlCompiler{
 	                    //update jobID of the job
 	                    job.setJobID(jobID);
 	                    
-	                    if(isOptimizeBySharing && isOptimizeBySharingWholePlan && (firstIter || ! isUseDiscovePlanHeuristics) && !hasFinalStore(mroToShare)){
-			                //ami: add mro to candidate plans to share
+	                    if(isOptimizeBySharing && isOptimizeBySharingWholePlan && (firstIter || (! isUseDiscovePlanHeuristics && !hasFinalStore(mroToShare)))){
+			                //ami: add mro to candidate plans to share 
 			                //SharedMapReducePlan candidateSharedPlan=new SharedMapReducePlan(mroToShare,null,null);
 			                //sharedPlans.add(candidateSharedPlan);
 			                //candidatePlansToShare.put(jobID, mro);
@@ -705,7 +710,7 @@ public class JobControlCompiler{
         				boolean isMultiQuery = 
         		            "true".equalsIgnoreCase(pigContext.getProperties().getProperty("opt.multiquery","true"));
         		        int planSizeBeforeOpt=this.plan.size();
-        		        if (isMultiQuery && !this.isUseDiscovePlanHeuristicsReducer) {
+        		        if (isMultiQuery && !this.isUseDiscovePlanHeuristicsReducer && !isDiscoverNewPlansReducerOn) {
         		            // reduces the number of MROpers in the MR plan generated 
         		            // by multi-query (multi-store) script.
         		            MultiQueryOptimizer mqOptimizer = new MultiQueryOptimizer(this.plan);
@@ -872,7 +877,7 @@ public class JobControlCompiler{
         		        	//continue
         		        	
         		        	//if we keep whole plans
-			                if(isOptimizeBySharingWholePlan && (firstIter || !isUseDiscovePlanHeuristics) &&  !hasFinalStore(mroToShare)){
+			                if(isOptimizeBySharingWholePlan && (firstIter || (!isUseDiscovePlanHeuristics &&  !hasFinalStore(mroToShare)))){
 			                	dependingCandidateSharedPlan=new SharedMapReducePlan(mroToShare,null,null);
 			                	//dependingCandidateSharedPlan.setJobForInputInfo(jobID);
 			                }
@@ -931,7 +936,7 @@ public class JobControlCompiler{
         			                candidatePlansToShare.put(jobID,planAndSubPlans);
         			                
         			                //if we keep whole plans
-        			                if(isOptimizeBySharingWholePlan && (firstIter || !isUseDiscovePlanHeuristics) && ! hasFinalStore(mroToShare)){
+        			                if(isOptimizeBySharingWholePlan && (firstIter || (!isUseDiscovePlanHeuristics && ! hasFinalStore(mroToShare))) ){
         			                	//dependingCandidateSharedPlan=new SharedMapReducePlan(mroToShare,null,null);
         			                	if(hasSameStoreLoc(dependingCandidateSharedPlan.getMRPlan(),newRootPlan )){
         			                		dependingCandidateSharedPlan.setJobForInputInfo(jobID);
@@ -1124,9 +1129,9 @@ public class JobControlCompiler{
     }
     
     private boolean hasFinalStore(MapReduceOper mroToShare) throws VisitorException {
-    	if(isUseDiscovePlanHeuristics){
+    	/*if(isUseDiscovePlanHeuristics){
     		return false;
-    	}
+    	}*/
     	List<POStore> planStores = MapReduceOper.getStores(mroToShare);
     	if(planStores==null || planStores.isEmpty()){
     		return false;

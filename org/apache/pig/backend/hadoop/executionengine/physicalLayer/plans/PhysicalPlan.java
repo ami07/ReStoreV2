@@ -82,7 +82,7 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 	
 	//@iman
 	public static final String DISCOVER_NEWPLANS_HEURISTICS = "sharing.useHeuristics.discoverPlans";
-    
+	public static final String DISCOVER_NEWPLANS_HEURISTICS_INNER = "sharing.useHeuristics.discoverPlans.inner";
     // marker to indicate whether all input for this plan
     // has been sent - this is currently only used in POStream
     // to know if all map() calls and reduce() calls are finished
@@ -798,6 +798,7 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 	public Vector<PhysicalPlan> discoverUsefulSubplans(PigContext pigContext, Configuration conf,List<POStore> stores, List <Pair<PhysicalPlan, PhysicalPlan>> newMapperRootPlans) throws PlanException, VisitorException, CloneNotSupportedException {
 		
 		boolean isUseDiscovePlanHeuristics=conf.getBoolean(DISCOVER_NEWPLANS_HEURISTICS, false);
+		boolean isUseDiscovePlanHeuristicsInner=conf.getBoolean(DISCOVER_NEWPLANS_HEURISTICS_INNER, false);
 		
 		Vector<PhysicalPlan> discoveredPlans=new Vector<PhysicalPlan>();
 		
@@ -820,7 +821,7 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 					
 					if(isUseDiscovePlanHeuristics){
 						//check if the succ is a filter or foreach
-						if(succ instanceof POFilter || succ instanceof POForEach){
+						if((succ instanceof POFilter || succ instanceof POForEach) && ! hasStoreSuccessor(succ)){
 							//this is the subplan that we are looking for
 						//if(! (succ instanceof POLoad) && ! (succ instanceof POStore) && /*this.getPredecessors(succ).size()==1 &&*/ this.getSuccessors(succ).size() >=1 && !(succ instanceof POLocalRearrange)){	
 							//STEP1:split the plan by adding a store after this filter/foreach op , then create two other plans
@@ -853,17 +854,35 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 							}
 						}*/
 						if(! (succ instanceof POLoad) && ! (succ instanceof POStore)  &&/*this.getPredecessors(succ).size()==1*//*!(succ instanceof POLocalRearrange) && !(succ instanceof POPreCombinerLocalRearrange) &&*/ ! hasStoreSuccessor(succ)){
-							//STEP1:split the plan by adding a store after this filter/foreach op , then create two other plans
-							PhysicalPlan sharedOperatorsPlan=null;
-							List<PhysicalOperator> opSuccs = this.getSuccessors(succ); 
-							if(opSuccs==null || opSuccs.size()==0){
-								//sharedOperatorsPlan=duplicateLastMapperOp(succ, pigContext,stores,newMapperRootPlans);
+							
+							if(isUseDiscovePlanHeuristicsInner){
+								if((succ instanceof POFilter || succ instanceof POForEach) && ! hasStoreSuccessor(succ)){
+									//STEP1:split the plan by adding a store after this filter/foreach op , then create two other plans
+									PhysicalPlan sharedOperatorsPlan=null;
+									List<PhysicalOperator> opSuccs = this.getSuccessors(succ); 
+									if(opSuccs==null || opSuccs.size()==0){
+										//sharedOperatorsPlan=duplicateLastMapperOp(succ, pigContext,stores,newMapperRootPlans);
+									}else{
+										sharedOperatorsPlan=splitPlan(load, succ, pigContext,stores, planLoads, newMapperRootPlans);
+									}
+									//STEP2:add the cloned plan to the list of discovered plans
+									if(sharedOperatorsPlan!=null){
+										discoveredPlans.add(sharedOperatorsPlan);
+									}
+								}
 							}else{
-								sharedOperatorsPlan=splitPlan(load, succ, pigContext,stores, planLoads, newMapperRootPlans);
-							}
-							//STEP2:add the cloned plan to the list of discovered plans
-							if(sharedOperatorsPlan!=null){
-								discoveredPlans.add(sharedOperatorsPlan);
+								//STEP1:split the plan by adding a store after this filter/foreach op , then create two other plans
+								PhysicalPlan sharedOperatorsPlan=null;
+								List<PhysicalOperator> opSuccs = this.getSuccessors(succ); 
+								if(opSuccs==null || opSuccs.size()==0){
+									//sharedOperatorsPlan=duplicateLastMapperOp(succ, pigContext,stores,newMapperRootPlans);
+								}else{
+									sharedOperatorsPlan=splitPlan(load, succ, pigContext,stores, planLoads, newMapperRootPlans);
+								}
+								//STEP2:add the cloned plan to the list of discovered plans
+								if(sharedOperatorsPlan!=null){
+									discoveredPlans.add(sharedOperatorsPlan);
+								}
 							}
 						}
 						

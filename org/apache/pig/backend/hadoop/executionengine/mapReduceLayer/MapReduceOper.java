@@ -56,6 +56,8 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
     private static final long serialVersionUID = 1L;
     //@iman
 	public static final String DISCOVER_NEWPLANS_HEURISTICS = "sharing.useHeuristics.discoverPlans";
+	public static final String DISCOVER_NEWPLANS_REDUCER = "sharing.discoverPlansReducer";
+	public static final String DISCOVER_NEWPLANS_EXCEPTLAST = "sharing.discoverPlans.exceptLast";
     //The physical plan that should be executed
     //in the map phase
     public PhysicalPlan mapPlan;
@@ -913,6 +915,7 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 	public List<MapReduceOper> discoverUsefulSubplans(PigContext pigContext, Configuration conf,MROperPlan mrplan,List <MapReduceOper> newMRRootPlans) throws VisitorException, PlanException, CloneNotSupportedException {
 		List<MapReduceOper> subPlansToShare=new ArrayList<MapReduceOper>();
 		List <Pair<PhysicalPlan, PhysicalPlan>> newMapperRootPlans=new ArrayList<Pair<PhysicalPlan, PhysicalPlan>>();
+		boolean isDiscoverNewPlansReducerOn = conf.getBoolean(DISCOVER_NEWPLANS_REDUCER, false);
 		//List <MapReduceOper> newMRRootPlans=new ArrayList<MapReduceOper>();
 		
 		//get stores of this plan
@@ -977,7 +980,7 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 				if(newSplitterPlan!=null && !newSplitterPlan.isEmpty() && newLoadStorePlan!=null && !newLoadStorePlan.isEmpty()){	
 					//create the MR loadStore op and it it to the MR Plan
 					MapReduceOper newMRLoadStore=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
-					if(newLoadStorePlan!=null && newMapperRootPlans.size()<=1 && isUseDiscovePlanHeuristics){
+					if(newLoadStorePlan!=null && newMapperRootPlans.size()<=1 && isUseDiscovePlanHeuristics && !isDiscoverNewPlansReducerOn){
 						newMRLoadStore.mapPlan=newLoadStorePlan;
 						//newMRLoadStore.setSplitter(true);
 						//newMRRootPlans.add(newMRLoadStore);
@@ -995,6 +998,13 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 			
 		}
 		
+		//inject a store in the reducer plan
+		
+		if(isDiscoverNewPlansReducerOn && subPlansToShare.isEmpty()){
+			discoverUsefulSubplansReducer(pigContext, conf, mrplan);
+			subPlansToShare.add(this.clone());
+			newMRRootPlans.add(this);
+		}
 		//create m/r plans for the new mapper root plans
 		/*for(Pair<PhysicalPlan, PhysicalPlan> newPlanPair:newMapperRootPlans){
 			PhysicalPlan newSplitterPlan=newPlanPair.first;
@@ -1116,7 +1126,10 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 	}
 
 	public void discoverUsefulSubplansReducer(PigContext pigContext, Configuration conf, MROperPlan mrplan) throws VisitorException, PlanException, CloneNotSupportedException{
-		
+		boolean isDiscovePlanExceptLastPlan = conf.getBoolean(DISCOVER_NEWPLANS_EXCEPTLAST, false);
+		if(isDiscovePlanExceptLastPlan && hasFinalStore(this)){
+			return;
+		}
 		//get stores of this plan
 		List<POStore> stores=null;
 		if(!reducePlan.isEmpty()){
@@ -1173,6 +1186,21 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 				//}
 			//}
 		}
+	}
+	private boolean hasFinalStore(MapReduceOper mroToShare) throws VisitorException {
+    	
+    	List<POStore> planStores = MapReduceOper.getStores(mroToShare);
+    	if(planStores==null || planStores.isEmpty()){
+    		return false;
+    	}else{
+    		for(POStore planStore:planStores){
+    			String storeFile=planStore.getSFile().getFileName();
+    			if(storeFile.contains("_out")){
+    				return true;
+    			}
+    		}
+    	}
+    	return false;
 	}
 	/**
   	 * discover sub plans to share by adding a split and store tmp data after a filter or foreach
