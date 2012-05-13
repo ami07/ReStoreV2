@@ -56,6 +56,7 @@ import org.apache.pig.backend.executionengine.ExecJob;
 import org.apache.pig.backend.hadoop.datastorage.ConfigurationUtil;
 import org.apache.pig.backend.hadoop.datastorage.HDataStorage;
 import org.apache.pig.backend.hadoop.executionengine.HExecutionEngine;
+import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.plans.PhysicalPlan;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
@@ -162,6 +163,10 @@ public class GruntParser extends PigScriptParser {
         return null;
     }
     
+    private MROperPlan compileBatchMRP() throws IOException {
+    	return mPigServer.executeBatchCompileMRP();
+    }
+    
     /**
      * modified for ReStore by @author iman
      * @throws IOException
@@ -170,6 +175,30 @@ public class GruntParser extends PigScriptParser {
         if (mPigServer.isBatchOn()) {
             if (!mLoadOnly) {
                 List<ExecJob> jobs = mPigServer.executeBatchFinalize();
+                for(ExecJob job: jobs) {
+                    if (job.getStatus() == ExecJob.JOB_STATUS.FAILED) {
+                        mNumFailedJobs++;
+                        Exception exp = (job.getException() != null) ? job.getException()
+                                : new ExecException(
+                                        "Job failed, hadoop does not return any error message",
+                                        2244);                        
+                        LogUtils.writeLog(exp, 
+                                mPigServer.getPigContext().getProperties().getProperty("pig.logfile"), 
+                                log, 
+                                "true".equalsIgnoreCase(mPigServer.getPigContext().getProperties().getProperty("verbose")),
+                                "Pig Stack Trace");
+                    } else {
+                        mNumSucceededJobs++;
+                    }
+                }
+            }
+        }
+    }
+    
+    private void executeBatchFinalize(MROperPlan updatedMapReducePlan) throws IOException {
+        if (mPigServer.isBatchOn()) {
+            if (!mLoadOnly) {
+                List<ExecJob> jobs = mPigServer.executeBatchFinalize(updatedMapReducePlan);
                 for(ExecJob job: jobs) {
                     if (job.getStatus() == ExecJob.JOB_STATUS.FAILED) {
                         mNumFailedJobs++;
@@ -267,15 +296,21 @@ public class GruntParser extends PigScriptParser {
 		    //}
         } 
         finally {
-		    if (!sameBatch) {
+		    /*if (!sameBatch) {
 		    	discardBatch();
-		    }
+		    }*/
         }
         //int [] res = { mNumSucceededJobs, mNumFailedJobs };
         //return res;
         return physicalPlan;
     }
 
+    public MROperPlan parseStopOnErrorCompileMRP(boolean sameBatch) throws IOException, ParseException
+    {
+    	MROperPlan mrp = compileBatchMRP();
+    	 
+    	 return mrp;
+    }
     /** 
      * Parses Pig commands in batch mode. 
      * 
@@ -288,15 +323,42 @@ public class GruntParser extends PigScriptParser {
             throw new IllegalStateException();
         }
 
-        if (!mInteractive && !sameBatch) {
+        /*if (!mInteractive && !sameBatch) {
             setBatchOn();
-        }
+        }*/
         
         try {
             
             
 		    if (!sameBatch) {
 		    	executeBatchFinalize();
+		    }
+        } 
+        finally {
+		    if (!sameBatch) {
+		    	discardBatch();
+		    }
+        }
+        int [] res = { mNumSucceededJobs, mNumFailedJobs };
+        return res;
+    }
+    
+    
+    public int[] parseStopOnErrorFinalize(boolean sameBatch, MROperPlan updatedMapReducePlan) throws IOException, ParseException
+    {
+        if (mPigServer == null) {
+            throw new IllegalStateException();
+        }
+
+        /*if (!mInteractive && !sameBatch) {
+            setBatchOn();
+        }*/
+        
+        try {
+            
+            
+		    if (!sameBatch) {
+		    	executeBatchFinalize(updatedMapReducePlan);
 		    }
         } 
         finally {

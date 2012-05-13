@@ -55,6 +55,7 @@ import org.apache.pig.backend.executionengine.ExecJob.JOB_STATUS;
 import org.apache.pig.backend.hadoop.datastorage.ConfigurationUtil;
 import org.apache.pig.backend.hadoop.executionengine.HExecutionEngine;
 import org.apache.pig.backend.hadoop.executionengine.HJob;
+import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.QuerySharingOptimizer;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.optimizer.PhysicalOptimizer;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.plans.PhysicalPlan;
@@ -180,6 +181,8 @@ public class PigServer {
     private boolean isMultiQuery = true;
 
 	private PhysicalPlan reStorePhysicalPlan;
+
+	private MROperPlan reStoreMRP;
     
     private String constructScope() {
         // scope servers for now as a session id
@@ -387,6 +390,28 @@ public class PigServer {
         return jobs;
     }
 
+    public List<ExecJob> executeBatchFinalize(MROperPlan updatedMapReducePlan) throws FrontendException, ExecException {
+        PigStats stats = executeBatchExFinalize(updatedMapReducePlan);
+        LinkedList<ExecJob> jobs = new LinkedList<ExecJob>();
+        JobGraph jGraph = stats.getJobGraph();
+        Iterator<JobStats> iter = jGraph.iterator();
+        while (iter.hasNext()) {
+            JobStats js = iter.next();
+            for (OutputStats output : js.getOutputs()) {
+                if (js.isSuccessful()) {                
+                    jobs.add(new HJob(HJob.JOB_STATUS.COMPLETED, pigContext, output
+                            .getPOStore(), output.getAlias(), stats));
+                } else {
+                    HJob hjob = new HJob(HJob.JOB_STATUS.FAILED, pigContext, output
+                            .getPOStore(), output.getAlias(), stats);
+                    hjob.setException(js.getException());
+                    jobs.add(hjob);
+                }
+            }
+        }
+        return jobs;
+    }
+
     /**
      * Submits a batch of Pig commands for compilation. 
      * 
@@ -405,6 +430,15 @@ public class PigServer {
     	return reStorePhysicalPlan;
     }
     
+    public MROperPlan executeBatchCompileMRP() throws FrontendException, ExecException{
+    	if (currDAG == null || !isBatchOn()) {
+            int errCode = 1083;
+            String msg = "setBatchOn() must be called first.";
+            throw new FrontendException(msg, errCode, PigException.INPUT);
+        }
+    	
+    	return executeCompileMRP();//currDAG.executeCompileMRP();
+    }
     
     private PigStats executeBatchEx() throws FrontendException, ExecException {
         if (!isMultiQuery) {
@@ -434,6 +468,21 @@ public class PigServer {
         }
         
         return currDAG.executeFinalize();
+    }
+    
+    private PigStats executeBatchExFinalize(MROperPlan updatedMapReducePlan) throws FrontendException, ExecException {
+        if (!isMultiQuery) {
+            // ignore if multiquery is off
+            return PigStats.get();
+        }
+
+        if (currDAG == null || !isBatchOn()) {
+            int errCode = 1083;
+            String msg = "setBatchOn() must be called first.";
+            throw new FrontendException(msg, errCode, PigException.INPUT);
+        }
+        
+        return currDAG.executeFinalize(updatedMapReducePlan);
     }
     
     /**
@@ -1263,6 +1312,10 @@ public class PigServer {
 
         return executeCompiledLogicalPlan(typeCheckedLp);
     }
+    private MROperPlan executeCompileMRP() throws FrontendException, ExecException {
+    	reStoreMRP = pigContext.getExecutionEngine().executeCompileMRP(reStorePhysicalPlan);
+    	return reStoreMRP;
+    }
     
     private PigStats executePhysicalPlan() throws FrontendException, ExecException {
     	if(reStorePhysicalPlan==null){
@@ -1290,6 +1343,58 @@ public class PigServer {
         return stats;
     }
     
+    private PigStats executeMapReducePlan() throws FrontendException, ExecException {
+    	if(reStorePhysicalPlan==null || reStoreMRP==null){
+    		return null;
+    	}
+    	// execute using appropriate engine
+        List<ExecJob> jobs = pigContext.getExecutionEngine().executeFinalize(reStoreMRP, "job_pigexec_");
+        PigStats stats = null;
+        if (jobs.size() > 0) {
+            stats = jobs.get(0).getStatistics();
+        } else {
+            stats = PigStatsUtil.getEmptyPigStats();
+        }
+        for (OutputStats output : stats.getOutputStats()) {
+            if (!output.isSuccessful()) {
+                POStore store = output.getPOStore();
+                try {
+                    store.getStoreFunc().cleanupOnFailure(store.getSFile().getFileName(),
+                            new Job(output.getConf()));
+                } catch (IOException e) {
+                    throw new ExecException(e);
+                }
+            }
+        }
+        return stats;
+    }
+    
+    
+    private PigStats executeMapReducePlan(MROperPlan updatedMapReducePlan) throws FrontendException, ExecException {
+    	if(reStorePhysicalPlan==null || reStoreMRP==null){
+    		return null;
+    	}
+    	// execute using appropriate engine
+        List<ExecJob> jobs = pigContext.getExecutionEngine().executeFinalize(updatedMapReducePlan, "job_pigexec_");
+        PigStats stats = null;
+        if (jobs.size() > 0) {
+            stats = jobs.get(0).getStatistics();
+        } else {
+            stats = PigStatsUtil.getEmptyPigStats();
+        }
+        for (OutputStats output : stats.getOutputStats()) {
+            if (!output.isSuccessful()) {
+                POStore store = output.getPOStore();
+                try {
+                    store.getStoreFunc().cleanupOnFailure(store.getSFile().getFileName(),
+                            new Job(output.getConf()));
+                } catch (IOException e) {
+                    throw new ExecException(e);
+                }
+            }
+        }
+        return stats;
+    }
     private PigStats executeCompiledLogicalPlan(LogicalPlan compiledLp) throws ExecException, FrontendException {
         // discover pig features used in this script
         ScriptState.get().setScriptFeatures(compiledLp);
@@ -1643,13 +1748,33 @@ public class PigServer {
             return stats;
         }
 
+        /*MROperPlan executeCompileMRP(PhysicalPlan plan) throws ExecException, FrontendException {
+                        
+        	MROperPlan mrp = PigServer.this.executeCompileMRP(plan);
+            
+            return mrp;
+        }*/
+        
         PigStats executeFinalize() throws ExecException, FrontendException {
             pigContext.getProperties().setProperty(PigContext.JOB_NAME, jobName);
             if (jobPriority != null) {
               pigContext.getProperties().setProperty(PigContext.JOB_PRIORITY, jobPriority);
             }
             
-            PigStats stats = PigServer.this.executePhysicalPlan();
+            //PigStats stats = PigServer.this.executePhysicalPlan();
+            PigStats stats = PigServer.this.executeMapReducePlan();
+            processedStores = storeOpTable.keySet().size();
+            return stats;
+        }
+        
+        PigStats executeFinalize(MROperPlan updatedMapReducePlan) throws ExecException, FrontendException {
+            pigContext.getProperties().setProperty(PigContext.JOB_NAME, jobName);
+            if (jobPriority != null) {
+              pigContext.getProperties().setProperty(PigContext.JOB_PRIORITY, jobPriority);
+            }
+            
+            //PigStats stats = PigServer.this.executePhysicalPlan();
+            PigStats stats = PigServer.this.executeMapReducePlan(updatedMapReducePlan);
             processedStores = storeOpTable.keySet().size();
             return stats;
         }

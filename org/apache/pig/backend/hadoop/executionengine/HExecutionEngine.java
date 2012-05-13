@@ -61,6 +61,8 @@ import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.LogicalPlan;
 import org.apache.pig.impl.plan.NodeIdGenerator;
 import org.apache.pig.impl.plan.OperatorKey;
+import org.apache.pig.impl.plan.PlanException;
+import org.apache.pig.impl.plan.VisitorException;
 import org.apache.pig.impl.util.ObjectSerializer;
 import org.apache.pig.impl.util.Utils;
 import org.apache.pig.newplan.DependencyOrderWalker;
@@ -105,6 +107,7 @@ public class HExecutionEngine {
     
     // map from LOGICAL key to into about the execution
     protected Map<OperatorKey, MapRedResult> materializedResults;
+	private MapReduceLauncher launcher;
     
     public HExecutionEngine(PigContext pigContext) {
         this.pigContext = pigContext;
@@ -413,10 +416,27 @@ public class HExecutionEngine {
      * modified for ReStore by @author iman
      * @param plan
      * @return MR plan after compiling the query
+     * @throws ExecException 
+     * @throws FrontendException 
      */
-    public MROperPlan executeCompileMRP(PhysicalPlan plan){
+    public MROperPlan executeCompileMRP(PhysicalPlan plan) throws ExecException, FrontendException{
     	MROperPlan mrp=null;
-    	
+    	launcher = new MapReduceLauncher();
+    	try {
+			mrp = launcher.launchPigCompileMRP(plan,pigContext);
+		} catch (Exception e) {
+            // There are a lot of exceptions thrown by the launcher.  If this
+            // is an ExecException, just let it through.  Else wrap it.
+            if (e instanceof ExecException){
+            	throw (ExecException)e;
+            } else if (e instanceof FrontendException) {
+            	throw (FrontendException)e;
+            } else {
+                int errCode = 2043;
+                String msg = "Unexpected error during execution.";
+                throw new ExecException(msg, errCode, PigException.BUG, e);
+            }
+        }
     	return mrp;
     }
     
@@ -441,6 +461,51 @@ public class HExecutionEngine {
         }
     }
   
+    /**
+     * @author iman
+     * @param mrp
+     * @param jobName
+     * @return
+     * @throws ExecException 
+     * @throws FrontendException 
+     */
+    public List<ExecJob>  executeFinalize(MROperPlan mrp, String jobName) throws ExecException, FrontendException{
+    	 List<ExecJob> jobs = new ArrayList<ExecJob>();
+
+         
+         try {
+             PigStats stats = launcher.launchPigFinalize(mrp, jobName, pigContext);
+
+             for (OutputStats output : stats.getOutputStats()) {
+                 POStore store = output.getPOStore();               
+                 String alias = store.getAlias();
+                 if (output.isSuccessful()) {
+                     jobs.add(new HJob(ExecJob.JOB_STATUS.COMPLETED, pigContext, store, alias, stats));
+                 } else {
+                     HJob j = new HJob(ExecJob.JOB_STATUS.FAILED, pigContext, store, alias, stats);  
+                     j.setException(launcher.getError(store.getSFile()));
+                     jobs.add(j);
+                 }
+             }
+
+             return jobs;
+         } catch (Exception e) {
+             // There are a lot of exceptions thrown by the launcher.  If this
+             // is an ExecException, just let it through.  Else wrap it.
+             if (e instanceof ExecException){
+             	throw (ExecException)e;
+             } else if (e instanceof FrontendException) {
+             	throw (FrontendException)e;
+             } else {
+                 int errCode = 2043;
+                 String msg = "Unexpected error during execution.";
+                 throw new ExecException(msg, errCode, PigException.BUG, e);
+             }
+         } finally {
+             launcher.reset();
+         }
+
+    }
     @SuppressWarnings("unchecked")
     private void setSSHFactory(){
         Properties properties = this.pigContext.getProperties();

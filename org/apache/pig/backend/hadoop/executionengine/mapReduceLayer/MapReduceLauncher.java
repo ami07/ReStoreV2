@@ -797,4 +797,315 @@ public class MapReduceLauncher extends Launcher{
         }    	
     }
 
+	public MROperPlan launchPigCompileMRP(PhysicalPlan plan, PigContext pigContext) throws PlanException, VisitorException, IOException {
+		MROperPlan mrp = compile(plan, pigContext);
+		return mrp;
+	}
+
+	public PigStats launchPigFinalize(MROperPlan mrp, String grpName,
+			PigContext pc) throws PlanException,
+            					VisitorException,
+            					IOException,
+            					ExecException,
+            					JobCreationException,
+            					Exception{
+		long sleepTime = 500;
+        aggregateWarning = "true".equalsIgnoreCase(pc.getProperties().getProperty("aggregate.warning"));
+        //MROperPlan mrp = compile(php, pc);
+                
+        HExecutionEngine exe = pc.getExecutionEngine();
+        ConfigurationValidator.validatePigProperties(exe.getConfiguration());
+        Configuration conf = ConfigurationUtil.toConfiguration(exe.getConfiguration());
+        JobClient jobClient = new JobClient(exe.getJobConf());
+        
+        JobControlCompiler jcc = new JobControlCompiler(pc, conf);
+        
+        // start collecting statistics
+        PigStatsUtil.startCollection(pc, jobClient, jcc, mrp); 
+        
+        List<Job> failedJobs = new LinkedList<Job>();
+        List<NativeMapReduceOper> failedNativeMR = new LinkedList<NativeMapReduceOper>();
+        List<Job> completeFailedJobsInThisRun = new LinkedList<Job>();
+        List<Job> succJobs = new LinkedList<Job>();
+        JobControl jc;
+        int totalMRJobs = mrp.size();
+        int numMRJobsCompl = 0;
+        double lastProg = -1;
+        
+        //create the exception handler for the job control thread
+        //and register the handler with the job control thread
+        JobControlThreadExceptionHandler jctExceptionHandler = new JobControlThreadExceptionHandler();
+        
+        boolean stop_on_failure = 
+            pc.getProperties().getProperty("stop.on.failure", "false").equals("true");
+        
+        // jc is null only when mrp.size == 0
+        while(mrp.size() != 0) {
+            jc = jcc.compile(mrp, grpName);
+            if(jc == null) {
+                List<MapReduceOper> roots = new LinkedList<MapReduceOper>();
+                roots.addAll(mrp.getRoots());
+                
+                // run the native mapreduce roots first then run the rest of the roots
+                for(MapReduceOper mro: roots) {
+                    if(mro instanceof NativeMapReduceOper) {
+                        NativeMapReduceOper natOp = (NativeMapReduceOper)mro;
+                        try {
+                            ScriptState.get().emitJobsSubmittedNotification(1);
+                            natOp.runJob();
+                            numMRJobsCompl++;
+                        } catch (IOException e) {
+                            
+                            mrp.trimBelow(natOp);
+                            failedNativeMR.add(natOp);
+                            
+                            String msg = "Error running native mapreduce" +
+                            " operator job :" + natOp.getJobId() + e.getMessage();
+                            
+                            String stackTrace = getStackStraceStr(e);
+                            LogUtils.writeLog(msg,
+                                    stackTrace,
+                                    pc.getProperties().getProperty("pig.logfile"),
+                                    log
+                            );     
+                            log.info(msg);
+                            
+                            if (stop_on_failure) {
+                                int errCode = 6017;
+                               
+                                throw new ExecException(msg, errCode,
+                                        PigException.REMOTE_ENVIRONMENT);
+                            }
+                            
+                        }
+                        double prog = ((double)numMRJobsCompl)/totalMRJobs;
+                        notifyProgress(prog, lastProg);
+                        lastProg = prog;
+                        mrp.remove(natOp);
+                    }
+                }
+                continue;
+            }
+        	// Initially, all jobs are in wait state.
+            List<Job> jobsWithoutIds = jc.getWaitingJobs();
+            log.info(jobsWithoutIds.size() +" map-reduce job(s) waiting for submission.");
+            //notify listeners about jobs submitted
+            ScriptState.get().emitJobsSubmittedNotification(jobsWithoutIds.size());
+            
+            // determine job tracker url 
+            String jobTrackerLoc;
+            JobConf jobConf = jobsWithoutIds.get(0).getJobConf();
+            try {
+                String port = jobConf.get("mapred.job.tracker.http.address");
+                String jobTrackerAdd = jobConf.get(HExecutionEngine.JOB_TRACKER_LOCATION);
+                
+                jobTrackerLoc = jobTrackerAdd.substring(0,jobTrackerAdd.indexOf(":")) 
+                + port.substring(port.indexOf(":"));
+            }
+            catch(Exception e){
+                // Could not get the job tracker location, most probably we are running in local mode.
+                // If it is the case, we don't print out job tracker location,
+                // because it is meaningless for local mode.
+            	jobTrackerLoc = null;
+                log.debug("Failed to get job tracker location.");
+            }
+            
+            completeFailedJobsInThisRun.clear();
+            
+            Thread jcThread = new Thread(jc);
+            jcThread.setUncaughtExceptionHandler(jctExceptionHandler);
+            
+            jcThread.setContextClassLoader(LogicalPlanBuilder.classloader);
+            
+            //All the setup done, now lets launch the jobs.
+            jcThread.start();
+            
+            // Now wait, till we are finished.
+            while(!jc.allFinished()){
+
+            	try { Thread.sleep(sleepTime); } 
+            	catch (InterruptedException e) {}
+            	
+            	List<Job> jobsAssignedIdInThisRun = new ArrayList<Job>();
+
+            	for(Job job : jobsWithoutIds){
+            		if (job.getAssignedJobID() != null){
+
+            			jobsAssignedIdInThisRun.add(job);
+            			log.info("HadoopJobId: "+job.getAssignedJobID());
+            			if(jobTrackerLoc != null){
+            				log.info("More information at: http://"+ jobTrackerLoc+
+            						"/jobdetails.jsp?jobid="+job.getAssignedJobID());
+            			}  
+            			
+            			ScriptState.get().emitJobStartedNotification(
+                                job.getAssignedJobID().toString());                        
+            		}
+            		else{
+            			// This job is not assigned an id yet.
+            		}
+            	}
+            	jobsWithoutIds.removeAll(jobsAssignedIdInThisRun);
+
+            	double prog = (numMRJobsCompl+calculateProgress(jc, jobClient))/totalMRJobs;
+            	notifyProgress(prog, lastProg);
+            	lastProg = prog;
+            }
+            
+            //check for the jobControlException first
+            //if the job controller fails before launching the jobs then there are
+            //no jobs to check for failure
+            if (jobControlException != null) {
+                if (jobControlException instanceof PigException) {
+                    if (jobControlExceptionStackTrace != null) {
+                        LogUtils.writeLog("Error message from job controller",
+                                jobControlExceptionStackTrace, pc
+                                        .getProperties().getProperty(
+                                                "pig.logfile"), log);
+                    }
+                    throw jobControlException;
+                } else {
+                    int errCode = 2117;
+                    String msg = "Unexpected error when launching map reduce job.";
+                    throw new ExecException(msg, errCode, PigException.BUG,
+                            jobControlException);
+                }
+            }
+            
+            if (!jc.getFailedJobs().isEmpty() ) {
+                if (stop_on_failure){
+                    int errCode = 6017;
+                    StringBuilder msg = new StringBuilder();
+                    
+                    for (int i=0; i<jc.getFailedJobs().size(); i++) {
+                        Job j = jc.getFailedJobs().get(i);
+                        msg.append(getFirstLineFromMessage(j.getMessage()));
+                        if (i!=jc.getFailedJobs().size()-1) {
+                            msg.append("\n");
+                        }
+                    }
+                    
+                    throw new ExecException(msg.toString(), errCode,
+                            PigException.REMOTE_ENVIRONMENT);
+                }
+                
+                // If we only have one store and that job fail, then we sure 
+                // that the job completely fail, and we shall stop dependent jobs
+                for (Job job : jc.getFailedJobs()) {
+                    completeFailedJobsInThisRun.add(job);
+                    log.info("job " + job.getAssignedJobID() + " has failed! Stop running all dependent jobs"); 
+                }
+                failedJobs.addAll(jc.getFailedJobs());
+            }
+
+            // update Pig stats' job DAG with job ids of just completed jobs
+            PigStatsUtil.updateJobMroMap(jcc.getJobMroMap());
+            
+            int removedMROp = jcc.updateMROpPlan(completeFailedJobsInThisRun);
+            
+            numMRJobsCompl += removedMROp;
+
+            List<Job> jobs = jc.getSuccessfulJobs();
+            jcc.moveResults(jobs);
+            succJobs.addAll(jobs);
+                        
+            // collecting statistics
+            PigStatsUtil.accumulateStats(jc);
+
+            jc.stop(); 
+        }
+
+        ScriptState.get().emitProgressUpdatedNotification(100);
+        
+        log.info( "100% complete");
+             
+        boolean failed = false;
+        
+        if(failedNativeMR.size() > 0){
+            failed = true;
+        }
+        
+        // Look to see if any jobs failed.  If so, we need to report that.
+        if (failedJobs != null && failedJobs.size() > 0) {
+            
+            Exception backendException = null;
+            for (Job fj : failedJobs) {                
+                try {
+                    getStats(fj, jobClient, true, pc);
+                } catch (Exception e) {
+                    backendException = e;
+                }
+                List<POStore> sts = jcc.getStores(fj);
+                for (POStore st: sts) {
+                    failureMap.put(st.getSFile(), backendException);
+                }
+                PigStatsUtil.setBackendException(fj, backendException);
+            }
+            failed = true;
+        }
+        
+        // stats collection is done, log the results
+        PigStatsUtil.stopCollection(true); 
+        
+        Map<Enum, Long> warningAggMap = new HashMap<Enum, Long>();
+                
+        if (succJobs != null) {
+            for (Job job : succJobs) {
+                List<POStore> sts = jcc.getStores(job);                
+                for (POStore st : sts) {
+                    // Currently (as of Feb 3 2010), hadoop's local mode does
+                    // not call cleanupJob on OutputCommitter (see
+                    // https://issues.apache.org/jira/browse/MAPREDUCE-1447)
+                    // So to workaround that bug, we are calling setStoreSchema
+                    // on StoreFunc's which implement StoreMetadata here
+                    /**********************************************************/
+                    // NOTE: THE FOLLOWING IF SHOULD BE REMOVED ONCE
+                    // MAPREDUCE-1447
+                    // IS FIXED - TestStore.testSetStoreSchema() should fail at
+                    // that time and removing this code should fix it.
+                    /**********************************************************/
+                    if (pc.getExecType() == ExecType.LOCAL) {
+                        storeSchema(job, st);
+                    }
+
+                    if (!st.isTmpStore()) {                       
+                        // create an "_SUCCESS" file in output location if 
+                        // output location is a filesystem dir
+                        createSuccessFile(job, st);                   
+                    } else {
+                        log.debug("Successfully stored result in: \""
+                                + st.getSFile().getFileName() + "\"");
+                    }
+                }
+                                
+                getStats(job, jobClient, false, pc);
+                if (aggregateWarning) {
+                    computeWarningAggregate(job, jobClient, warningAggMap);
+                }
+            }
+
+        }
+        
+        if(aggregateWarning) {
+            CompilationMessageCollector.logAggregate(warningAggMap, MessageType.Warning, log) ;
+        }
+                                                    
+        if (!failed) {
+            log.info("Success!");
+        } else {
+            if (succJobs != null && succJobs.size() > 0) {
+                log.info("Some jobs have failed! Stop running all dependent jobs");
+            } else {
+                log.info("Failed!");
+            }
+        }
+        jcc.reset();
+
+        int ret = failed ? ((succJobs != null && succJobs.size() > 0) 
+                ? ReturnCode.PARTIAL_FAILURE
+                : ReturnCode.FAILURE)
+                : ReturnCode.SUCCESS; 
+        return PigStatsUtil.getPigStats(ret);
+	}
+
 }

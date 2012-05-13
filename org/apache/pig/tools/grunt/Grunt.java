@@ -37,6 +37,7 @@ import org.apache.pig.tools.grunt.PigCompletor;
 import org.apache.pig.tools.grunt.PigCompletorAliases;
 import org.apache.pig.PigException;
 import org.apache.pig.backend.executionengine.ExecException;
+import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.plans.PhysicalPlan;
 import org.apache.pig.tools.pigscript.parser.*;
 import org.apache.pig.impl.logicalLayer.parser.TokenMgrError;
@@ -113,6 +114,17 @@ public class Grunt
         }
     }
     
+    public MROperPlan execQueryCompileMRP() throws Throwable {
+    	boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
+        try {
+            parser.setInteractive(false);
+            return parser.parseStopOnErrorCompileMRP(false);
+        } catch (Throwable t) {
+            LogUtils.writeLog(t, pig.getPigContext().getProperties().getProperty("pig.logfile"), 
+                    log, verbose, "Pig Stack Trace");
+            throw (t);
+        }
+    }
     public int[] execQueryRewrite() throws Throwable {
         boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
         try {
@@ -149,6 +161,19 @@ public class Grunt
         }
     }
     
+    public int[] execQueryFinalize(MROperPlan updatedMapReducePlan) throws Throwable{
+    	boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
+        try {
+            parser.setInteractive(false);
+            return parser.parseStopOnErrorFinalize(false, updatedMapReducePlan);
+        } catch (Throwable t) {
+            LogUtils.writeLog(t, pig.getPigContext().getProperties().getProperty("pig.logfile"), 
+                    log, verbose, "Pig Stack Trace");
+            throw (t);
+        }
+    	
+	}
+    
     public void checkScript(String scriptFile) throws Throwable {
         boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
         try {
@@ -163,5 +188,7 @@ public class Grunt
             throw (t);
         }
     }
+
+	
 
 }

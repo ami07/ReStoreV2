@@ -221,7 +221,14 @@ public class JobControlCompiler{
         firstIter=true;
     }
 
-    /**
+    public JobControlCompiler(PigContext pigContext, Configuration conf) {
+    	this.pigContext = pigContext;
+        this.conf = conf;
+        jobStoreMap = new HashMap<Job, Pair<List<POStore>, Path>>();
+        jobMroMap = new HashMap<Job, MapReduceOper>();
+	}
+
+	/**
      * Load the table with jobs and their tmp file
      * @throws IOException 
      * @throws ClassNotFoundException 
