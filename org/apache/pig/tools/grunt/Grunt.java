@@ -37,6 +37,7 @@ import org.apache.pig.tools.grunt.PigCompletor;
 import org.apache.pig.tools.grunt.PigCompletorAliases;
 import org.apache.pig.PigException;
 import org.apache.pig.backend.executionengine.ExecException;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.plans.PhysicalPlan;
 import org.apache.pig.tools.pigscript.parser.*;
 import org.apache.pig.impl.logicalLayer.parser.TokenMgrError;
 import org.apache.pig.impl.util.LogUtils;
@@ -88,6 +89,59 @@ public class Grunt
         try {
             parser.setInteractive(false);
             return parser.parseStopOnError();
+        } catch (Throwable t) {
+            LogUtils.writeLog(t, pig.getPigContext().getProperties().getProperty("pig.logfile"), 
+                    log, verbose, "Pig Stack Trace");
+            throw (t);
+        }
+    }
+    
+    /**
+     * @author iman
+     * @return
+     * @throws Throwable
+     */
+    public PhysicalPlan execQueryCompile() throws Throwable {
+        boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
+        try {
+            parser.setInteractive(false);
+            return parser.parseStopOnErrorCompile(false);
+        } catch (Throwable t) {
+            LogUtils.writeLog(t, pig.getPigContext().getProperties().getProperty("pig.logfile"), 
+                    log, verbose, "Pig Stack Trace");
+            throw (t);
+        }
+    }
+    
+    public int[] execQueryRewrite() throws Throwable {
+        boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
+        try {
+            parser.setInteractive(false);
+            return parser.parseStopOnError();
+        } catch (Throwable t) {
+            LogUtils.writeLog(t, pig.getPigContext().getProperties().getProperty("pig.logfile"), 
+                    log, verbose, "Pig Stack Trace");
+            throw (t);
+        }
+    }
+    
+    public int[] execQueryInject() throws Throwable {
+        boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
+        try {
+            parser.setInteractive(false);
+            return parser.parseStopOnError();
+        } catch (Throwable t) {
+            LogUtils.writeLog(t, pig.getPigContext().getProperties().getProperty("pig.logfile"), 
+                    log, verbose, "Pig Stack Trace");
+            throw (t);
+        }
+    }
+    
+    public int[] execQueryFinalize() throws Throwable {
+        boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
+        try {
+            parser.setInteractive(false);
+            return parser.parseStopOnErrorFinalize(false);
         } catch (Throwable t) {
             LogUtils.writeLog(t, pig.getPigContext().getProperties().getProperty("pig.logfile"), 
                     log, verbose, "Pig Stack Trace");

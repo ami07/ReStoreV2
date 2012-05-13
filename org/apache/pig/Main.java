@@ -107,6 +107,9 @@ public static void main(String args[]) {
     System.exit(run(args, null));
 }
 
+
+
+
 static int run(String args[], PigProgressNotificationListener listener) {
     int rc = 1;
     boolean verbose = false;
@@ -835,5 +838,324 @@ private static String validateLogFile(String logFileName, String scriptName) {
 private static String getFileFromCanonicalPath(String canonicalPath) {
     return canonicalPath.substring(canonicalPath.lastIndexOf(File.separator));
 }
+
+public int setupPig(){
+	int rc = 1;
+    boolean verbose = false;
+    boolean gruntCalled = false;
+    String logFileName = null;
+    PigProgressNotificationListener listener = null;
+    
+    try {
+        Configuration conf = new Configuration(false);
+        String[] args=new String[0];
+        GenericOptionsParser parser = new GenericOptionsParser(conf, args);
+        conf = parser.getConfiguration();    
+        
+        Properties properties = new Properties();
+        PropertiesUtil.loadDefaultProperties(properties);
+        properties.putAll(ConfigurationUtil.toProperties(conf));
+        
+        String[] pigArgs = parser.getRemainingArgs();
+        
+        
+        boolean userSpecifiedLog = false;
+        
+        boolean checkScriptOnly = false;
+
+    
+        BufferedReader pin = null;
+        boolean debug = false;
+        boolean dryrun = false;
+        ArrayList<String> params = new ArrayList<String>();
+        ArrayList<String> paramFiles = new ArrayList<String>();
+        HashSet<String> optimizerRules = new HashSet<String>();
+        
+        CmdLineParser opts = new CmdLineParser(pigArgs);
+        opts.registerOpt('4', "log4jconf", CmdLineParser.ValueExpected.REQUIRED);
+        opts.registerOpt('b', "brief", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('c', "check", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('d', "debug", CmdLineParser.ValueExpected.REQUIRED);
+        opts.registerOpt('e', "execute", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('f', "file", CmdLineParser.ValueExpected.REQUIRED);
+        opts.registerOpt('h', "help", CmdLineParser.ValueExpected.OPTIONAL);
+        opts.registerOpt('i', "version", CmdLineParser.ValueExpected.OPTIONAL);        
+        opts.registerOpt('l', "logfile", CmdLineParser.ValueExpected.REQUIRED);
+        opts.registerOpt('m', "param_file", CmdLineParser.ValueExpected.OPTIONAL);
+        opts.registerOpt('p', "param", CmdLineParser.ValueExpected.OPTIONAL);
+        opts.registerOpt('r', "dryrun", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('t', "optimizer_off", CmdLineParser.ValueExpected.REQUIRED);
+        opts.registerOpt('v', "verbose", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('w', "warning", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('x', "exectype", CmdLineParser.ValueExpected.REQUIRED);
+        opts.registerOpt('F', "stop_on_failure", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('M', "no_multiquery", CmdLineParser.ValueExpected.NOT_ACCEPTED);
+        opts.registerOpt('P', "propertyFile", CmdLineParser.ValueExpected.REQUIRED);
+
+        
+        ExecMode mode = ExecMode.UNKNOWN;
+        String file = null;
+        ExecType execType = ExecType.MAPREDUCE ;
+        String execTypeString = properties.getProperty("exectype");
+        if(execTypeString!=null && execTypeString.length()>0){
+            execType = PigServer.parseExecType(execTypeString);
+        }
+                
+        if (properties.getProperty("aggregate.warning") == null) {
+            //by default warning aggregation is on
+            properties.setProperty("aggregate.warning", ""+true);
+        }
+                
+        if (properties.getProperty("opt.multiquery") == null) {
+            //by default multiquery optimization is on
+            properties.setProperty("opt.multiquery", ""+true);
+        }
+
+        if (properties.getProperty("stop.on.failure") == null) {
+            //by default we keep going on error on the backend
+            properties.setProperty("stop.on.failure", ""+false);
+        }
+        
+        if( "true".equals( properties.getProperty( "mapred.output.compress" ) ) ) {
+            properties.setProperty( "output.compression.enabled",  "true" );
+            String codec = properties.getProperty( "mapred.output.compression.codec" );
+            if( codec == null ) {
+                throw new RuntimeException( "'mapred.output.compress' is set but no value is specified for 'mapred.output.compression.codec'." );
+            } else {
+                properties.setProperty( "output.compression.codec", codec );
+            }
+        }
+        
+        // set up client side system properties in UDF context
+        UDFContext.getUDFContext().setClientSystemProps();
+
+        char opt;
+        while ((opt = opts.getNextOpt()) != CmdLineParser.EndOfOpts) {
+            switch (opt) {
+            case '4':
+                String log4jconf = opts.getValStr();
+                if(log4jconf != null){
+                    properties.setProperty(LOG4J_CONF, log4jconf);
+                }
+                break;
+
+            case 'b':
+                properties.setProperty(BRIEF, "true");
+                break;
+
+            case 'c': 
+                checkScriptOnly = true;                
+                break;
+
+            case 'd':
+                String logLevel = opts.getValStr();
+                if (logLevel != null) {
+                    properties.setProperty(DEBUG, logLevel);
+                }
+                debug = true;
+                break;
+                
+            case 'e': 
+                mode = ExecMode.STRING;
+                break;
+
+            case 'f':
+                mode = ExecMode.FILE;
+                file = opts.getValStr();
+                break;
+
+            case 'F':
+                properties.setProperty("stop.on.failure", ""+true);
+                break;
+
+            case 'h':
+		String topic = opts.getValStr();
+		if (topic != null)
+		    if (topic.equalsIgnoreCase("properties"))
+		        printProperties();
+                    else{
+                        System.out.println("Invalide help topic - " + topic);
+			usage();
+                    }
+		else
+                    usage();
+                return ReturnCode.SUCCESS;
+
+            case 'i':
+            	System.out.println(getVersionString());
+            	return ReturnCode.SUCCESS;
+
+            case 'l':
+                //call to method that validates the path to the log file 
+                //and sets up the file to store the client side log file                
+                String logFileParameter = opts.getValStr();
+                if (logFileParameter != null && logFileParameter.length() > 0) {
+                    logFileName = validateLogFile(logFileParameter, null);
+                } else {
+                    logFileName = validateLogFile(logFileName, null);
+                }
+                userSpecifiedLog = true;
+                properties.setProperty("pig.logfile", (logFileName == null? "": logFileName));
+                break;
+
+            case 'm':
+                paramFiles.add(opts.getValStr());
+                break;
+
+            case 'M':
+                // turns off multiquery optimization
+                properties.setProperty("opt.multiquery",""+false);
+                break;
+                            
+            case 'p': 
+                params.add(opts.getValStr());
+                break;
+                            
+            case 'r': 
+                // currently only used for parameter substitution
+                // will be extended in the future
+                dryrun = true;
+                break;
+
+            case 't':
+            	optimizerRules.add(opts.getValStr());
+                break;
+                            
+            case 'v':
+                properties.setProperty(VERBOSE, ""+true);
+                verbose = true;
+                break;
+
+            case 'w':
+                properties.setProperty("aggregate.warning", ""+false);
+                break;
+
+            case 'x':
+                try {
+                    execType = PigServer.parseExecType(opts.getValStr());
+                    } catch (IOException e) {
+                        throw new RuntimeException("ERROR: Unrecognized exectype.", e);
+                    }
+                break;
+                
+            case 'P':
+            {
+                InputStream inputStream = null;
+                try {
+                    FileLocalizer.FetchFileRet localFileRet = FileLocalizer.fetchFile(properties, opts.getValStr());
+                    inputStream = new BufferedInputStream(new FileInputStream(localFileRet.file));
+                    properties.load(inputStream) ;
+                } catch (IOException e) {
+                    throw new RuntimeException("Unable to parse properties file '" + opts.getValStr() + "'");
+                } finally {
+                    if (inputStream != null) {
+                        try {
+                            inputStream.close();
+                        } catch (IOException e) {
+                        } 
+                    }
+                }
+            }
+            break;
+            
+            default: {
+                Character cc = Character.valueOf(opt);
+                throw new AssertionError("Unhandled option " + cc.toString());
+                     }
+            }
+        }
+        
+     // create the context with the parameter
+        PigContext pigContext = new PigContext(execType, properties);
+        
+        // create the static script state object
+        String commandLine = LoadFunc.join((AbstractList<String>)Arrays.asList(args), " ");
+        ScriptState scriptState = ScriptState.start(commandLine);
+        if (listener != null) {
+            scriptState.registerListener(listener);
+        }
+        
+
+        if(logFileName == null && !userSpecifiedLog) {
+            logFileName = validateLogFile(properties.getProperty("pig.logfile"), null);
+        }
+        
+        pigContext.getProperties().setProperty("pig.logfile", (logFileName == null? "": logFileName));
+     
+        // configure logging
+        configureLog4J(properties, pigContext);
+        
+        if(logFileName != null) {
+            log.info("Logging error messages to: " + logFileName);
+        }
+        
+        if(optimizerRules.size() > 0) {
+        	pigContext.getProperties().setProperty("pig.optimizer.rules", ObjectSerializer.serialize(optimizerRules));
+        }
+        
+        if (properties.get("udf.import.list")!=null)
+            PigContext.initializeImportList((String)properties.get("udf.import.list"));
+
+        LogicalPlanBuilder.classloader = pigContext.createCl(null);
+        
+    }catch (Throwable e) {
+        rc = ReturnCode.THROWABLE_EXCEPTION;
+        PigStatsUtil.setErrorMessage(e.getMessage());
+        if(!gruntCalled) {
+        	LogUtils.writeLog(e, logFileName, log, verbose, "Error before Pig is launched");
+        }      
+    } finally {
+        // clear temp files
+        FileLocalizer.deleteTempFiles();
+        PerformanceTimerFactory.getPerfTimerFactory().dumpTimers();        
+    }
+    
+    return rc;
+}
+
+/*public void runQueryToEnd(String pigQueryFileName){
+	FileLocalizer.FetchFileRet localFileRet = FileLocalizer.fetchFile(properties, file);
+    if (localFileRet.didFetch) {
+        properties.setProperty("pig.jars.relative.to.dfs", "true");
+    }
+    in = new BufferedReader(new FileReader(localFileRet.file));
+
+    // run parameter substitution preprocessor first
+    substFile = file + ".substituted";
+    pin = runParamPreprocessor(properties, in, params, paramFiles, substFile, debug || dryrun || checkScriptOnly);
+    if (dryrun) {
+        log.info("Dry run completed. Substituted pig script is at " + substFile);
+        return ReturnCode.SUCCESS;
+    }
+
+    logFileName = validateLogFile(logFileName, file);
+    pigContext.getProperties().setProperty("pig.logfile", logFileName);
+
+    // Set job name based on name of the script
+    pigContext.getProperties().setProperty(PigContext.JOB_NAME, 
+                                           "PigLatin:" +new File(file).getName()
+    );
+    
+    if (!debug) {
+        new File(substFile).deleteOnExit();
+    }
+    
+    scriptState.setScript(new File(file));
+    
+    grunt = new Grunt(pin, pigContext);
+    gruntCalled = true;
+    
+    if(checkScriptOnly) {
+        grunt.checkScript(substFile);
+        System.err.println(file + " syntax OK");
+        rc = ReturnCode.SUCCESS;
+    } else {
+        int results[] = grunt.exec();
+        rc = getReturnCodeForStats(results);
+    }
+    
+    return rc;
+}*/
+
 
 }

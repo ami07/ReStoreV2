@@ -56,6 +56,7 @@ import org.apache.pig.backend.executionengine.ExecJob;
 import org.apache.pig.backend.hadoop.datastorage.ConfigurationUtil;
 import org.apache.pig.backend.hadoop.datastorage.HDataStorage;
 import org.apache.pig.backend.hadoop.executionengine.HExecutionEngine;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.plans.PhysicalPlan;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.io.FileLocalizer;
@@ -130,6 +131,65 @@ public class GruntParser extends PigScriptParser {
         }
     }
 
+    
+    private PhysicalPlan compileBatch() throws IOException {
+        if (mPigServer.isBatchOn()) {
+            if (mExplain != null) {
+                explainCurrentBatch();
+            }
+
+            if (!mLoadOnly) {
+               return  mPigServer.executeBatchCompile();
+                
+                /*for(ExecJob job: jobs) {
+                    if (job.getStatus() == ExecJob.JOB_STATUS.FAILED) {
+                        mNumFailedJobs++;
+                        Exception exp = (job.getException() != null) ? job.getException()
+                                : new ExecException(
+                                        "Job failed, hadoop does not return any error message",
+                                        2244);                        
+                        LogUtils.writeLog(exp, 
+                                mPigServer.getPigContext().getProperties().getProperty("pig.logfile"), 
+                                log, 
+                                "true".equalsIgnoreCase(mPigServer.getPigContext().getProperties().getProperty("verbose")),
+                                "Pig Stack Trace");
+                    } else {
+                        mNumSucceededJobs++;
+                    }
+                }*/
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * modified for ReStore by @author iman
+     * @throws IOException
+     */
+    private void executeBatchFinalize() throws IOException {
+        if (mPigServer.isBatchOn()) {
+            if (!mLoadOnly) {
+                List<ExecJob> jobs = mPigServer.executeBatchFinalize();
+                for(ExecJob job: jobs) {
+                    if (job.getStatus() == ExecJob.JOB_STATUS.FAILED) {
+                        mNumFailedJobs++;
+                        Exception exp = (job.getException() != null) ? job.getException()
+                                : new ExecException(
+                                        "Job failed, hadoop does not return any error message",
+                                        2244);                        
+                        LogUtils.writeLog(exp, 
+                                mPigServer.getPigContext().getProperties().getProperty("pig.logfile"), 
+                                log, 
+                                "true".equalsIgnoreCase(mPigServer.getPigContext().getProperties().getProperty("verbose")),
+                                "Pig Stack Trace");
+                    } else {
+                        mNumSucceededJobs++;
+                    }
+                }
+            }
+        }
+    }
+    
     private void discardBatch() throws IOException {
         if (mPigServer.isBatchOn()) {
             mPigServer.discardBatch();
@@ -177,7 +237,77 @@ public class GruntParser extends PigScriptParser {
         int [] res = { mNumSucceededJobs, mNumFailedJobs };
         return res;
     }
+    
+    /** 
+     * Parses Pig commands in either interactive mode or batch mode. 
+     * 
+     * modified for ReStore by @author iman
+     * @throws IOException, ParseException
+     */
+    public PhysicalPlan parseStopOnErrorCompile(boolean sameBatch) throws IOException, ParseException
+    {
+    	PhysicalPlan physicalPlan=null;
+        /*if (mPigServer == null) {
+            throw new IllegalStateException();
+        }*/
 
+    	if (!mInteractive && !sameBatch) {
+            setBatchOn();
+        }
+
+        try {
+            prompt();
+            mDone = false;
+            while(!mDone) {
+                parse();
+            }
+            
+		    //if (!sameBatch) {
+		    	physicalPlan = compileBatch();
+		    //}
+        } 
+        finally {
+		    if (!sameBatch) {
+		    	discardBatch();
+		    }
+        }
+        //int [] res = { mNumSucceededJobs, mNumFailedJobs };
+        //return res;
+        return physicalPlan;
+    }
+
+    /** 
+     * Parses Pig commands in batch mode. 
+     * 
+     * modified for ReStore by @author iman
+     * @throws IOException, ParseException
+     */
+    public int[] parseStopOnErrorFinalize(boolean sameBatch) throws IOException, ParseException
+    {
+        if (mPigServer == null) {
+            throw new IllegalStateException();
+        }
+
+        if (!mInteractive && !sameBatch) {
+            setBatchOn();
+        }
+        
+        try {
+            
+            
+		    if (!sameBatch) {
+		    	executeBatchFinalize();
+		    }
+        } 
+        finally {
+		    if (!sameBatch) {
+		    	discardBatch();
+		    }
+        }
+        int [] res = { mNumSucceededJobs, mNumFailedJobs };
+        return res;
+    }
+    
     public void setLoadOnly(boolean loadOnly) 
     {
         mLoadOnly = loadOnly;

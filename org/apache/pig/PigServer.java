@@ -178,6 +178,8 @@ public class PigServer {
 
     private boolean aggregateWarning = true;
     private boolean isMultiQuery = true;
+
+	private PhysicalPlan reStorePhysicalPlan;
     
     private String constructScope() {
         // scope servers for now as a session id
@@ -354,7 +356,56 @@ public class PigServer {
         }
         return jobs;
     }
+    
+    /**
+     * Submits a batch of Pig commands for execution. 
+     * 
+     * modified for ReStore by @author iman
+     * @return list of jobs being executed
+     * @throws FrontendException
+     * @throws ExecException
+     */
+    public List<ExecJob> executeBatchFinalize() throws FrontendException, ExecException {
+        PigStats stats = executeBatchExFinalize();
+        LinkedList<ExecJob> jobs = new LinkedList<ExecJob>();
+        JobGraph jGraph = stats.getJobGraph();
+        Iterator<JobStats> iter = jGraph.iterator();
+        while (iter.hasNext()) {
+            JobStats js = iter.next();
+            for (OutputStats output : js.getOutputs()) {
+                if (js.isSuccessful()) {                
+                    jobs.add(new HJob(HJob.JOB_STATUS.COMPLETED, pigContext, output
+                            .getPOStore(), output.getAlias(), stats));
+                } else {
+                    HJob hjob = new HJob(HJob.JOB_STATUS.FAILED, pigContext, output
+                            .getPOStore(), output.getAlias(), stats);
+                    hjob.setException(js.getException());
+                    jobs.add(hjob);
+                }
+            }
+        }
+        return jobs;
+    }
 
+    /**
+     * Submits a batch of Pig commands for compilation. 
+     * 
+     * modified for ReStore by @author iman
+     * @return 
+     * @return list of jobs being executed
+     * @throws FrontendException
+     * @throws ExecException
+     */
+    public PhysicalPlan executeBatchCompile() throws FrontendException, ExecException {
+    	LogicalPlan typeCheckedLp = compileLp(null);
+    	
+    	//PhysicalPlan pp 
+    	reStorePhysicalPlan = compilePp(typeCheckedLp);
+    	
+    	return reStorePhysicalPlan;
+    }
+    
+    
     private PigStats executeBatchEx() throws FrontendException, ExecException {
         if (!isMultiQuery) {
             // ignore if multiquery is off
@@ -368,6 +419,21 @@ public class PigServer {
         }
         
         return currDAG.execute();
+    }
+    
+    private PigStats executeBatchExFinalize() throws FrontendException, ExecException {
+        if (!isMultiQuery) {
+            // ignore if multiquery is off
+            return PigStats.get();
+        }
+
+        if (currDAG == null || !isBatchOn()) {
+            int errCode = 1083;
+            String msg = "setBatchOn() must be called first.";
+            throw new FrontendException(msg, errCode, PigException.INPUT);
+        }
+        
+        return currDAG.executeFinalize();
     }
     
     /**
@@ -1198,6 +1264,32 @@ public class PigServer {
         return executeCompiledLogicalPlan(typeCheckedLp);
     }
     
+    private PigStats executePhysicalPlan() throws FrontendException, ExecException {
+    	if(reStorePhysicalPlan==null){
+    		return null;
+    	}
+    	// execute using appropriate engine
+        List<ExecJob> jobs = pigContext.getExecutionEngine().execute(reStorePhysicalPlan, "job_pigexec_");
+        PigStats stats = null;
+        if (jobs.size() > 0) {
+            stats = jobs.get(0).getStatistics();
+        } else {
+            stats = PigStatsUtil.getEmptyPigStats();
+        }
+        for (OutputStats output : stats.getOutputStats()) {
+            if (!output.isSuccessful()) {
+                POStore store = output.getPOStore();
+                try {
+                    store.getStoreFunc().cleanupOnFailure(store.getSFile().getFileName(),
+                            new Job(output.getConf()));
+                } catch (IOException e) {
+                    throw new ExecException(e);
+                }
+            }
+        }
+        return stats;
+    }
+    
     private PigStats executeCompiledLogicalPlan(LogicalPlan compiledLp) throws ExecException, FrontendException {
         // discover pig features used in this script
         ScriptState.get().setScriptFeatures(compiledLp);
@@ -1224,6 +1316,7 @@ public class PigServer {
         return stats;
     }
 
+    
     private LogicalPlan compileLp(
             String alias) throws FrontendException {
         return compileLp(alias, true);
@@ -1550,6 +1643,17 @@ public class PigServer {
             return stats;
         }
 
+        PigStats executeFinalize() throws ExecException, FrontendException {
+            pigContext.getProperties().setProperty(PigContext.JOB_NAME, jobName);
+            if (jobPriority != null) {
+              pigContext.getProperties().setProperty(PigContext.JOB_PRIORITY, jobPriority);
+            }
+            
+            PigStats stats = PigServer.this.executePhysicalPlan();
+            processedStores = storeOpTable.keySet().size();
+            return stats;
+        }
+        
         void markAsExecuted() {
             processedStores = storeOpTable.keySet().size();
         }

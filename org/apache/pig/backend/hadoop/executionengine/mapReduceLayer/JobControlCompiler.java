@@ -571,7 +571,7 @@ public class JobControlCompiler{
             		
             	//}
             	
-            	if(!noExecForMRO){
+            	if(!noExecForMRO){ 
 	            	//ami: the current plan did not match with any of the existing shared plans
             		//add the plan to the jobs to be executed, and
             		//add this plan as a candidate to be shared in the future
@@ -2250,6 +2250,10 @@ public class JobControlCompiler{
 	}
 
 	private void insertIntoSharedPlans(SharedMapReducePlan candidateSharedPlan) {
+		
+		//decide if the plan is good enough to store in the repository based on the collected stats
+		
+		
 		//iterate through the shared plans to put the new cand shared plan in its order
 		int i=0;
 		while(i<sharedPlans.size()){

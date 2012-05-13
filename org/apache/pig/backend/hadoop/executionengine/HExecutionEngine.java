@@ -48,6 +48,7 @@ import org.apache.pig.backend.executionengine.ExecJob;
 import org.apache.pig.backend.hadoop.datastorage.ConfigurationUtil;
 import org.apache.pig.backend.hadoop.datastorage.HDataStorage;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher;
+import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.LogToPhyTranslationVisitor;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.PhysicalOperator;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.plans.PhysicalPlan;
@@ -408,6 +409,26 @@ public class HExecutionEngine {
 
     }
 
+    /**
+     * modified for ReStore by @author iman
+     * @param plan
+     * @return MR plan after compiling the query
+     */
+    public MROperPlan executeCompileMRP(PhysicalPlan plan){
+    	MROperPlan mrp=null;
+    	
+    	return mrp;
+    }
+    
+    /**
+     * modified for ReStore by @author iman
+     * @return an attempt of rewriting the MRP using the original algorithm
+     */
+    public MROperPlan executeRewriteExplain(){
+    	MROperPlan mrp=null;
+    	
+    	return mrp;
+    }
     public void explain(PhysicalPlan plan, PrintStream stream, String format, boolean verbose) {
         try {
             MapRedUtil.checkLeafIsStore(plan, pigContext);
