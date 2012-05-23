@@ -41,7 +41,7 @@ public class SharedMapReducePlan implements Serializable {
 
 	
 
-	SharedMapReducePlan(MapReduceOper mrplan, POStore jobStore, String jobStoreLocation){
+	public SharedMapReducePlan(MapReduceOper mrplan, POStore jobStore, String jobStoreLocation){
 		this(mrplan, 0, jobStore, jobStoreLocation);
 	}
 

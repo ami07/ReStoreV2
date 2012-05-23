@@ -108,5 +108,9 @@ public class FileSpec implements Serializable {
 		return false;
 	}
 
+	public void updateFileName() {
+		this.fileName=new String(this.fileName+"_"+System.currentTimeMillis());
+	}
+
 	
 }

@@ -40,6 +40,7 @@ import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.plans.PhysicalPlan;
 import org.apache.pig.tools.pigscript.parser.*;
+import org.apache.pig.tools.pigstats.PigStats;
 import org.apache.pig.impl.logicalLayer.parser.TokenMgrError;
 import org.apache.pig.impl.util.LogUtils;
 
@@ -161,7 +162,7 @@ public class Grunt
         }
     }
     
-    public int[] execQueryFinalize(MROperPlan updatedMapReducePlan) throws Throwable{
+    public PigStats execQueryFinalize(MROperPlan updatedMapReducePlan) throws Throwable{
     	boolean verbose = "true".equalsIgnoreCase(pig.getPigContext().getProperties().getProperty("verbose"));
         try {
             parser.setInteractive(false);

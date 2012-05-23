@@ -191,7 +191,7 @@ public class MapReduceLauncher extends Launcher{
         Map<String,String> jcJobIdMapReverse=new HashMap<String,String>();
         // jc is null only when mrp.size == 0
         while(mrp.size() != 0) {
-            jc = jcc.compile(mrp, grpName);
+            jc = jcc.compileSH(mrp, grpName);
             
             if(jc == null) {
                 List<MapReduceOper> roots = new LinkedList<MapReduceOper>();

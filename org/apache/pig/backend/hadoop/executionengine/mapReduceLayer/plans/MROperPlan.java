@@ -19,10 +19,13 @@ package org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Collection;
+import java.util.Set;
 
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceOper;
 import org.apache.pig.impl.plan.OperatorPlan;
 import org.apache.pig.impl.plan.VisitorException;
+import org.apache.pig.impl.util.MultiMap;
 
 
 /**
@@ -63,6 +66,63 @@ public class MROperPlan extends OperatorPlan<MapReduceOper> {
 			return true;
 		}
 		return false;
+	}
+	
+	public MROperPlan clone(){
+		MROperPlan clonedMRP=new MROperPlan();
+		
+		MultiMap<MapReduceOper,MapReduceOper> cloningMap=new  MultiMap<MapReduceOper,MapReduceOper>();
+		
+		Set<MapReduceOper> ops = mOps.keySet();
+		for(MapReduceOper op:ops){
+			MapReduceOper clonedOp = null;
+			try {
+				clonedOp = op.clone();
+				clonedMRP.add(clonedOp);
+			} catch (CloneNotSupportedException e) {
+				e.printStackTrace();
+			}
+			if(clonedOp!=null){
+				cloningMap.put(op, clonedOp);
+			}
+		}
+		
+		//update the mFromEdges & mToEdges
+		Set<MapReduceOper> fromEdgeKeys = mFromEdges.keySet();
+		for(MapReduceOper op1:fromEdgeKeys){
+			Collection<MapReduceOper> op2List=mFromEdges.get(op1);
+			for(MapReduceOper op2: op2List){
+				MapReduceOper clonedOp1 = (MapReduceOper) cloningMap.get(op1).toArray()[0];
+				MapReduceOper clonedOp2 = (MapReduceOper) cloningMap.get(op2).toArray()[0];
+				
+				if(clonedOp1!=null && clonedOp2!=null){
+					clonedMRP.mFromEdges.put(clonedOp1, clonedOp2);
+					clonedMRP.mToEdges.put(clonedOp2, clonedOp1);
+				}
+			}
+			
+		}
+		
+				
+		//update the mSoftFromEdges & mSoftToEdges
+		Set<MapReduceOper> fromSoftEdgeKeys = mSoftFromEdges.keySet();
+		for(MapReduceOper op1:fromSoftEdgeKeys){
+			Collection<MapReduceOper> op2List=mSoftFromEdges.get(op1);
+			for(MapReduceOper op2: op2List){
+				MapReduceOper clonedOp1 = (MapReduceOper) cloningMap.get(op1).toArray()[0];
+				MapReduceOper clonedOp2 = (MapReduceOper) cloningMap.get(op2).toArray()[0];
+				
+				if(clonedOp1!=null && clonedOp2!=null){
+					clonedMRP.mSoftFromEdges.put(clonedOp1, clonedOp2);
+					clonedMRP.mSoftToEdges.put(clonedOp2, clonedOp1);
+				}
+			}
+			
+		}
+		
+		
+		
+		return clonedMRP;
 	}
 
 }

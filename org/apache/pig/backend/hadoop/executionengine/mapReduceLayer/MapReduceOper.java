@@ -43,6 +43,7 @@ import org.apache.pig.backend.hadoop.executionengine.physicalLayer.util.PlanHelp
 import org.apache.pig.impl.plan.Operator;
 import org.apache.pig.impl.plan.PlanException;
 import org.apache.pig.impl.plan.VisitorException;
+import org.apache.pig.impl.util.MultiMap;
 import org.apache.pig.impl.util.Pair;
 
 /**
@@ -58,6 +59,13 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 	public static final String DISCOVER_NEWPLANS_HEURISTICS = "sharing.useHeuristics.discoverPlans";
 	public static final String DISCOVER_NEWPLANS_REDUCER = "sharing.discoverPlansReducer";
 	public static final String DISCOVER_NEWPLANS_EXCEPTLAST = "sharing.discoverPlans.exceptLast";
+	
+	private static final String RESTORE_DISCOVER_PLANS_LEVEL = "restore.discoverLevel";
+	private static final String RESTORE_DISCOVER_PLANS = "restore.discoverPlans";
+	private static final String RESTORE_DISCOVER_NOHEURISTIC = "NH";
+	private static final String RESTORE_DISCOVER_HEURISTIC_CONS = "HC";
+	private static final String RESTORE_DISCOVER_HEURISTIC_AGG = "HA";
+	
     //The physical plan that should be executed
     //in the map phase
     public PhysicalPlan mapPlan;
@@ -1144,7 +1152,7 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 			
 			//for(;;){
 				List<MapReduceOper> mrSuccs = mrplan.getSuccessors(this);
-				List <PhysicalPlan> newMapperRootPlans=new ArrayList<PhysicalPlan>();
+				List<PhysicalPlan> newMapperRootPlans=new ArrayList<PhysicalPlan>();
 				reducePlan.discoverUsefulSubplansReducer(pigContext, conf,stores,  newMapperRootPlans);
 				
 				//create m/r plans for the new mapper root plans
@@ -1202,49 +1210,10 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
     	}
     	return false;
 	}
-	/**
-  	 * discover sub plans to share by adding a split and store tmp data after a filter or foreach
-  	 * that makes substantial change
-  	 * @pre note that this plan is after making any possible rewriting, so discovering other possible
-  	 * shared plans will not overlap with any existing shared plans!
-  	 * @return
-  	 * @author iman
-  	 * @param plan 
-  	 * @throws CloneNotSupportedException 
-  	 * @throws PlanException 
-  	 * @throws VisitorException 
-  	 */
-	public Vector<MapReduceOper> discoverUsefulSubplans(PigContext pigContext) throws VisitorException, PlanException, CloneNotSupportedException {
-		Vector<MapReduceOper> subPlansToShare=new Vector<MapReduceOper>();
-		//get stores of this plan
-		List<POStore> stores=null;
-		if(!reducePlan.isEmpty()){
-			stores=PlanHelper.getStores(reducePlan);
-		}else if(!mapPlan.isEmpty()){
-			stores=PlanHelper.getStores(mapPlan);
-		}else{
-			stores=new ArrayList<POStore>();
-		}
-		//get the mapper
-		if(!mapPlan.isEmpty()){
-			Vector<PhysicalPlan> subMapPlansToShare = mapPlan.discoverUsefulSubplans(pigContext,stores);
-			//create MR plan for every discovered subplan
-			for(PhysicalPlan newPlan:subMapPlansToShare){
-				if(newPlan!=null&&!newPlan.isEmpty()){
-					MapReduceOper newMRPlan=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
-					if(newMRPlan!=null){
-						newMRPlan.mapPlan=newPlan;
-						subPlansToShare.add(newMRPlan);
-					}
-				}
-			}
-		}
-		return subPlansToShare;
-	}
+	
+	
 
-	public boolean hasTempStore() {
-		return false;
-	}
+	
 
 	public Pair<String,String> replaceTempStore() throws VisitorException {
 		List<POStore> stores=null;
@@ -1279,4 +1248,218 @@ public class MapReduceOper extends Operator<MROpPlanVisitor> {
 	}
   	
   	
+	public MultiMap<String, MapReduceOper> discoverSubplans(PigContext pigContext,  MROperPlan mrplan) throws VisitorException, PlanException, CloneNotSupportedException{
+		MultiMap<String, MapReduceOper> storedPlans=new MultiMap<String, MapReduceOper>();
+		MultiMap<String, MapReduceOper> storedPlansReducer=new MultiMap<String, MapReduceOper>();
+		MultiMap<String, MapReduceOper> storedPlansMapper=new MultiMap<String, MapReduceOper>();
+		
+		boolean isDiscoverPlans = pigContext.getProperties().getProperty(RESTORE_DISCOVER_PLANS, "false").equals("true");
+		String discoverPlansLevel = pigContext.getProperties().getProperty(RESTORE_DISCOVER_PLANS_LEVEL, "HC");
+		
+		if(!isDiscoverPlans){
+			return storedPlans;
+		}
+		
+		if(!this.reducePlan.isEmpty() && !discoverPlansLevel.equalsIgnoreCase(RESTORE_DISCOVER_HEURISTIC_CONS)){
+			//discover plans from the reducer
+			//get all leaves (store operators)
+			List<PhysicalOperator> reducerStores = new ArrayList<PhysicalOperator> ();
+			reducerStores.addAll(reducePlan.getLeaves());
+			
+			if(reducerStores!=null){
+				//for every reducer store
+				for(PhysicalOperator reducerStore : reducerStores){
+					
+					//get predecessors of this store
+					List<PhysicalOperator> storePredecessors = reducePlan.getPredecessors(reducerStore);
+					
+					if(storePredecessors!=null){
+						//try to inject a store after each of these predecessors
+						for(PhysicalOperator storePred : storePredecessors){
+							storedPlansReducer = discoverSubPlansReducer(reducerStore, this, mrplan , discoverPlansLevel, pigContext );
+							if(storedPlansReducer!=null){
+								Set<String> storedPlanOuts = storedPlansReducer.keySet();
+								for(String storedPlanOut: storedPlanOuts){
+									storedPlans.put(storedPlanOut, storedPlansReducer.get(storedPlanOut));
+								}
+							}
+						}
+					}
+				}
+			}
+			
+		}
+		
+		if(!this.mapPlan.isEmpty()){
+			//discover plans from the mapper
+			
+			//get all leaves of the mapper
+			List<PhysicalOperator> leaves = new ArrayList<PhysicalOperator> ();
+			leaves.addAll(mapPlan.getLeaves());
+			if(leaves!=null){
+				for(PhysicalOperator leaf:leaves){
+					//call discover plans for this leaf
+					storedPlansMapper = discoverSubPlansMapper(leaf, this.mapPlan, mrplan,discoverPlansLevel, pigContext);
+					if(storedPlansMapper!=null){
+						Set<String> storedPlanOuts = storedPlansMapper.keySet();
+						for(String storedPlanOut: storedPlanOuts){
+							storedPlans.put(storedPlanOut, storedPlansMapper.get(storedPlanOut));
+						}
+					}
+				}
+			}
+			
+		}
+		
+		//optimize the mr plan after injecting the store operators 
+		
+		return storedPlans;
+	}
+
+	
+
+	private MultiMap<String, MapReduceOper> discoverSubPlansReducer(PhysicalOperator pred,  MapReduceOper mro, MROperPlan mrplan, 
+			String discoverPlansLevel, PigContext pigContext) 
+					throws VisitorException, PlanException, CloneNotSupportedException {
+		
+		MultiMap<String, MapReduceOper> storedPlans=new MultiMap<String, MapReduceOper>();
+		PhysicalPlan mroReducer = mro.reducePlan;
+		//get predecessors of this store
+		List<PhysicalOperator> predPredecessors = mroReducer.getPredecessors(pred);
+		List<POStore> stores=PlanHelper.getStores(reducePlan);				
+		if(predPredecessors!=null){
+			for(PhysicalOperator predPred : predPredecessors){
+				//inject a store after this operator
+				List<PhysicalPlan> returnPlans = new ArrayList<PhysicalPlan>();
+				List<MapReduceOper> mrSuccs = mrplan.getSuccessors(mro);
+								
+				PhysicalPlan.injectStoreAfterReducer(mroReducer, predPred, returnPlans, discoverPlansLevel, pigContext, stores);
+								
+				if(returnPlans!=null && returnPlans.size() > 0){
+					for(PhysicalPlan splittedPlan:returnPlans){
+						//PhysicalPlan splittedPlan = returnPlans[0];
+						//PhysicalPlan storePlan = returnPlans[1];
+										
+						if(splittedPlan!=null && !splittedPlan.isEmpty()){
+							//rearrange the mrp to add the two new plans
+							//create the MR splitter op  an add it to the MR plan
+							MapReduceOper newMRPlan=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
+							if(newMRPlan!=null){
+								newMRPlan.mapPlan=splittedPlan;
+																							
+								//add the new m/r plan
+								mrplan.add(newMRPlan);
+												
+								if(mrSuccs==null || mrSuccs.isEmpty()){
+									//connect the m/r plans with this m/r plan
+									mrplan.connect(this, newMRPlan);
+								}else{
+									for(MapReduceOper succ:mrSuccs){
+										mrplan.insertBetween(mro, newMRPlan, succ);
+									}
+								}
+							}
+											
+							//book keep information about the plan and the output 
+							POStore storeTmp=PlanHelper.getStores(newMRPlan.reducePlan).get(0);
+							storedPlans.put(storeTmp.getSFile().getFileName(), newMRPlan);			
+											
+							//call the discoverSubPlansReducer for this node to inject stores in the bottom part
+							MultiMap<String, MapReduceOper> newStoredPlans = discoverSubPlansReducer(predPred, newMRPlan,  mrplan, discoverPlansLevel, pigContext);
+							Set<String> newStoredPlansKeys = newStoredPlans.keySet();
+							for(String key: newStoredPlansKeys){
+								storedPlans.put(key, newStoredPlans.get(key));
+							}
+						}
+					}
+				}
+			}
+		}
+		return storedPlans;		
+	}
+	
+	
+	private MultiMap<String, MapReduceOper> discoverSubPlansMapper(
+			PhysicalOperator op, PhysicalPlan mapPlan, MROperPlan mrplan,
+			String discoverPlansLevel, PigContext pigContext) throws PlanException, VisitorException, CloneNotSupportedException {
+		MultiMap<String, MapReduceOper> storedPlans=new MultiMap<String, MapReduceOper>();
+		
+		if(op instanceof POStore){
+			//get predecessors of the node
+			List<PhysicalOperator> preds = mapPlan.getPredecessors(op);
+			
+			//recursively call for each pred
+			for(PhysicalOperator pred:preds){
+				MultiMap<String, MapReduceOper>  innerStoredPlans = this.discoverSubPlansMapper(pred, mapPlan, mrplan, discoverPlansLevel, pigContext);
+				Set<String> newStoredPlansKeys = innerStoredPlans.keySet();
+				for(String key: newStoredPlansKeys){
+					storedPlans.put(key, innerStoredPlans.get(key));
+				}
+			}
+		}else{
+			List<Pair<PhysicalPlan, PhysicalPlan>> returnPlans =PhysicalPlan.injectStoreAfterMapper(mapPlan, op, discoverPlansLevel, pigContext);
+			
+			//handle each return plan
+			for(Pair<PhysicalPlan, PhysicalPlan> newPlanPair: returnPlans){
+				PhysicalPlan newSplitterPlan=newPlanPair.first;
+				PhysicalPlan newLoadStorePlan=newPlanPair.second;
+				
+				//create the MR splitter op  an add it to the MR plan
+				MapReduceOper newMRPlan=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
+				if(newSplitterPlan!=null && !newSplitterPlan.isEmpty()){
+					
+					
+					if(newMRPlan!=null){
+						newMRPlan.mapPlan=newSplitterPlan;
+						newMRPlan.setSplitter(true);
+						//POStore storeTmp=PlanHelper.getStores(newMRPlan.mapPlan).get(0);
+						//storedPlans.put(storeTmp.getSFile().getFileName(),newMRPlan);
+						
+						//connect the m/r plans with this m/r plan
+						mrplan.add(newMRPlan);
+						mrplan.connect(newMRPlan, this);
+					}
+				}
+				//boolean isUseDiscovePlanHeuristics=conf.getBoolean(DISCOVER_NEWPLANS_HEURISTICS, false);	
+				if(newSplitterPlan!=null && !newSplitterPlan.isEmpty() && newLoadStorePlan!=null && 
+						!newLoadStorePlan.isEmpty()){	
+					//create the MR loadStore op and it it to the MR Plan
+					MapReduceOper newMRLoadStore=new MapReduceOper(new OperatorKey(mKey.scope, NodeIdGenerator.getGenerator().getNextNodeId(mKey.scope)));
+					if(newLoadStorePlan!=null && returnPlans.size()<=1){
+						newMRLoadStore.mapPlan=newLoadStorePlan;
+						//newMRLoadStore.setSplitter(true);
+						//newMRRootPlans.add(newMRLoadStore);
+						
+						//connect the m/r plans with this m/r plan
+						mrplan.add(newMRLoadStore);
+						mrplan.connect(newMRPlan, newMRLoadStore);
+					}else{
+						//replace the tmpStorage with the sharedStorage from newLoadStorePlan
+						mapPlan.replaceTmpLoadWithSharedStorage(newSplitterPlan,newLoadStorePlan);
+					}
+					
+					
+					if(newMRPlan!=null){
+						
+						POStore storeTmp=PlanHelper.getStores(newMRPlan.mapPlan).get(0);
+						storedPlans.put(storeTmp.getSFile().getFileName(),newMRPlan.clone());
+					}
+				}
+				
+				//now call inject stores for the new created plan
+				if(newSplitterPlan!=null){
+					List<PhysicalOperator> leavesSplitterPlan = newSplitterPlan.getLeaves();
+					if(leavesSplitterPlan!=null && leavesSplitterPlan.size()>0){
+						PhysicalOperator leafOperator = leavesSplitterPlan.get(0);
+						MultiMap<String, MapReduceOper>  innerStoredPlans = newMRPlan.discoverSubPlansMapper(leafOperator, newSplitterPlan, mrplan, discoverPlansLevel, pigContext);
+						Set<String> newStoredPlansKeys = innerStoredPlans.keySet();
+						for(String key: newStoredPlansKeys){
+							storedPlans.put(key, innerStoredPlans.get(key));
+						}
+					}
+				}
+			}
+		}
+		return storedPlans;
+	}
 }

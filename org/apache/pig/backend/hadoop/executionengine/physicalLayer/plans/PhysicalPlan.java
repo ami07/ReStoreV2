@@ -41,13 +41,21 @@ import org.apache.pig.backend.hadoop.executionengine.physicalLayer.expressionOpe
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.expressionOperators.ConstantExpression;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.expressionOperators.ExpressionOperator;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.expressionOperators.POBinCond;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POFRJoin;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POFilter;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POForEach;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POJoinPackage;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POLoad;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POLocalRearrange;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POMergeCogroup;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POMergeJoin;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POMultiQueryPackage;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POPackage;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POPackageLite;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POPreCombinerLocalRearrange;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POSplit;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POStore;
+import org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators.POUnion;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.util.PlanHelper;
 import org.apache.pig.backend.hadoop.executionengine.physicalLayer.expressionOperators.UnaryComparisonOperator;
 import org.apache.pig.builtin.BinStorage;
@@ -83,7 +91,12 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 	//@iman
 	public static final String DISCOVER_NEWPLANS_HEURISTICS = "sharing.useHeuristics.discoverPlans";
 	public static final String DISCOVER_NEWPLANS_HEURISTICS_INNER = "sharing.useHeuristics.discoverPlans.inner";
-    // marker to indicate whether all input for this plan
+    
+	private static final String RESTORE_DISCOVER_NOHEURISTIC = "NH";
+	private static final String RESTORE_DISCOVER_HEURISTIC_CONS = "HC";
+	private static final String RESTORE_DISCOVER_HEURISTIC_AGG = "HA";
+	
+	// marker to indicate whether all input for this plan
     // has been sent - this is currently only used in POStream
     // to know if all map() calls and reduce() calls are finished
     // and that there is no more input expected.
@@ -979,6 +992,21 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 		return false;
 	}
 
+
+	private static boolean hasStoreSuccessor(PhysicalOperator op, PhysicalPlan plan) {
+		List<PhysicalOperator> opSuccs = plan.getSuccessors(op); 
+		if(opSuccs==null || opSuccs.size()==0){
+			return false;
+		}
+		for(PhysicalOperator succ:opSuccs){
+			if(succ instanceof POStore){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 	private PhysicalPlan createPlan(POLoad load, PhysicalOperator lastOpToShare,
 			PigContext pigContext, List<POStore> stores,
 			List<PhysicalPlan> newMapperRootPlans) throws CloneNotSupportedException, PlanException {
@@ -1398,5 +1426,113 @@ public class PhysicalPlan extends OperatorPlan<PhysicalOperator> implements Clon
 		
 		//reset all the fields of this plan
 		resetPlan();
+	}
+
+	public static void injectStoreAfterReducer(PhysicalPlan plan, PhysicalOperator op, 
+			List<PhysicalPlan> returnPlans, String discoverPlansLevel, PigContext pigContext, 
+			List<POStore> stores) throws PlanException, CloneNotSupportedException {
+		if(hasStoreSuccessor(op, plan)){
+			return;
+		}
+		//check the heuristic level
+		if(discoverPlansLevel.equalsIgnoreCase(RESTORE_DISCOVER_HEURISTIC_AGG) && !isAggOperator(op)){
+			return;
+		}
+		
+		//split the plan 
+		plan.splitReducerPlan(op, returnPlans, pigContext, stores);
+	}
+
+	private static boolean isAggOperator(PhysicalOperator op) {
+		if(op instanceof POFilter || op instanceof POForEach || 
+				op instanceof POFRJoin || op instanceof POJoinPackage || op instanceof POMergeJoin ||
+				op instanceof POMergeCogroup || op instanceof POMultiQueryPackage || op instanceof POPackage ||
+				op instanceof POPackageLite || op instanceof POUnion){
+			return true;
+		}
+		return false;
+	}
+	
+	
+	
+	public static void injectStoreAfterMapper(PhysicalPlan plan, PhysicalOperator op,
+			List<PhysicalPlan> returnPlans, String discoverPlansLevel, PigContext pigContext){
+		List<PhysicalOperator> planLoads= plan.getRoots();
+		
+		//get the predecessors of the operator
+		
+	}
+
+	public static List<Pair<PhysicalPlan, PhysicalPlan>> injectStoreAfterMapper(
+			PhysicalPlan plan, PhysicalOperator op,
+			String discoverPlansLevel, PigContext pigContext) throws PlanException, VisitorException, CloneNotSupportedException {
+		
+		List<PhysicalPlan> returnPlans=new ArrayList<PhysicalPlan>();
+		List<POLoad> planLoads= PlanHelper.getLoads(plan);//plan.getRoots();
+		List<POStore> planStores= PlanHelper.getStores(plan);
+		List<Pair<PhysicalPlan, PhysicalPlan>> newMapperRootPlans = new ArrayList<Pair<PhysicalPlan, PhysicalPlan>>();
+			
+		//for every predecessor of the op operator
+		List<PhysicalOperator> preds=new ArrayList<PhysicalOperator> ();
+		List<PhysicalOperator> predsOr=plan.getPredecessors(op);
+		if(predsOr!=null){
+			preds.addAll(predsOr);
+		}
+		
+		for(PhysicalOperator pred: preds){
+			//check if the pred op is a load then skip
+			if(!(pred instanceof POLoad)){
+				//if heuristics used, then it has to be filter or for each
+				if(discoverPlansLevel.equalsIgnoreCase(RESTORE_DISCOVER_HEURISTIC_CONS)||discoverPlansLevel.equalsIgnoreCase(RESTORE_DISCOVER_HEURISTIC_AGG)){
+					//the op has to be filter or for each
+					if(pred instanceof POFilter || pred instanceof POForEach){
+						POLoad load = plan.getLoadForOp(pred, planLoads);
+						//inject store regardless the type of the op
+						plan.splitPlan(load , pred, pigContext,planStores, planLoads, newMapperRootPlans);
+						//add the new discovered roots to the return type
+						
+					}else{
+						//call function for predicates of this op
+						List<Pair<PhysicalPlan, PhysicalPlan>> mapperRootPlans = injectStoreAfterMapper(plan, pred, discoverPlansLevel, pigContext);
+						newMapperRootPlans.addAll(mapperRootPlans);
+					}
+				}else{
+					
+					POLoad load = plan.getLoadForOp(pred, planLoads);
+					//inject store regardless the type of the op
+					plan.splitPlan(load , pred, pigContext,planStores, planLoads, newMapperRootPlans);
+				}
+			}
+		}
+		
+		return newMapperRootPlans;
+	}
+
+	private POLoad getLoadForOp(PhysicalOperator op,
+			List<POLoad> planLoads) {
+		
+		for(POLoad load:planLoads){
+			if(isLoadForOp(load,op)){
+				return load;
+			}
+		}
+		return null;
+	}
+
+	private boolean isLoadForOp(POLoad load, PhysicalOperator op) {
+		//get preds for op
+		List<PhysicalOperator> preds = this.getPredecessors(op);
+			if(preds!=null){
+			for(PhysicalOperator pred :preds){
+				if(pred.equals(load)){
+					return true;
+				}
+				boolean isPred=isLoadForOp(load, pred);
+				if(isPred){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

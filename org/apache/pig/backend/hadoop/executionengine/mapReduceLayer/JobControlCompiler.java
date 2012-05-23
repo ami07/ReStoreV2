@@ -421,7 +421,6 @@ public class JobControlCompiler{
         return new Path(pathStr);
     }
     
-    
     /**
      * Compiles all jobs that have no dependencies removes them from
      * the plan and returns. Should be called with the same plan until
@@ -432,6 +431,43 @@ public class JobControlCompiler{
      * @throws JobCreationException
      */
     public JobControl compile(MROperPlan plan, String grpName) throws JobCreationException{
+        // Assert plan.size() != 0
+        this.plan = plan;
+
+        JobControl jobCtrl = new JobControl(grpName);
+
+        try {
+            List<MapReduceOper> roots = new LinkedList<MapReduceOper>();
+            roots.addAll(plan.getRoots());
+            for (MapReduceOper mro: roots) {
+                if(mro instanceof NativeMapReduceOper) {
+                    return null;
+                }
+                Job job = getJob(mro, conf, pigContext);
+                jobMroMap.put(job, mro);
+                jobCtrl.addJob(job);
+            }
+        } catch (JobCreationException jce) {
+        	throw jce;
+        } catch(Exception e) {
+            int errCode = 2017;
+            String msg = "Internal error creating job configuration.";
+            throw new JobCreationException(msg, errCode, PigException.BUG, e);
+        }
+
+        return jobCtrl;
+    }
+    
+    /**
+     * Compiles all jobs that have no dependencies removes them from
+     * the plan and returns. Should be called with the same plan until
+     * exhausted. 
+     * @param plan - The MROperPlan to be compiled
+     * @param grpName - The name given to the JobControl
+     * @return JobControl object - null if no more jobs in plan
+     * @throws JobCreationException
+     */
+    public JobControl compileSH(MROperPlan plan, String grpName) throws JobCreationException{
         // Assert plan.size() != 0
         this.plan = plan;
 

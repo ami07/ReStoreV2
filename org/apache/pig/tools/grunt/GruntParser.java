@@ -68,6 +68,7 @@ import org.apache.pig.tools.parameters.ParameterSubstitutionPreprocessor;
 import org.apache.pig.tools.pigscript.parser.ParseException;
 import org.apache.pig.tools.pigscript.parser.PigScriptParser;
 import org.apache.pig.tools.pigscript.parser.PigScriptParserTokenManager;
+import org.apache.pig.tools.pigstats.PigStats;
 
 @SuppressWarnings("deprecation")
 public class GruntParser extends PigScriptParser {
@@ -195,11 +196,13 @@ public class GruntParser extends PigScriptParser {
         }
     }
     
-    private void executeBatchFinalize(MROperPlan updatedMapReducePlan) throws IOException {
+    private PigStats executeBatchFinalize(MROperPlan updatedMapReducePlan) throws IOException {
+    	PigStats stats=null;
         if (mPigServer.isBatchOn()) {
             if (!mLoadOnly) {
-                List<ExecJob> jobs = mPigServer.executeBatchFinalize(updatedMapReducePlan);
-                for(ExecJob job: jobs) {
+                //List<ExecJob> jobs = mPigServer.executeBatchFinalize(updatedMapReducePlan);
+            	stats=mPigServer.executeBatchFinalize(updatedMapReducePlan);
+                /*for(ExecJob job: jobs) {
                     if (job.getStatus() == ExecJob.JOB_STATUS.FAILED) {
                         mNumFailedJobs++;
                         Exception exp = (job.getException() != null) ? job.getException()
@@ -214,8 +217,12 @@ public class GruntParser extends PigScriptParser {
                     } else {
                         mNumSucceededJobs++;
                     }
-                }
+                }*/
             }
+            
+            return stats;
+        }else{
+        	return null;
         }
     }
     
@@ -344,8 +351,9 @@ public class GruntParser extends PigScriptParser {
     }
     
     
-    public int[] parseStopOnErrorFinalize(boolean sameBatch, MROperPlan updatedMapReducePlan) throws IOException, ParseException
+    public PigStats parseStopOnErrorFinalize(boolean sameBatch, MROperPlan updatedMapReducePlan) throws IOException, ParseException
     {
+    	PigStats stats=null;
         if (mPigServer == null) {
             throw new IllegalStateException();
         }
@@ -358,7 +366,7 @@ public class GruntParser extends PigScriptParser {
             
             
 		    if (!sameBatch) {
-		    	executeBatchFinalize(updatedMapReducePlan);
+		    	return executeBatchFinalize(updatedMapReducePlan);
 		    }
         } 
         finally {
@@ -367,7 +375,8 @@ public class GruntParser extends PigScriptParser {
 		    }
         }
         int [] res = { mNumSucceededJobs, mNumFailedJobs };
-        return res;
+        //return res;
+        return stats;
     }
     
     public void setLoadOnly(boolean loadOnly) 

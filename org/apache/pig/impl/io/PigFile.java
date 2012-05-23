@@ -47,12 +47,12 @@ public class PigFile {
     boolean append = false;
 
     public PigFile(String filename, boolean append) {
-        file = filename;
+        file = filename+"_"+System.currentTimeMillis();
         this.append = append;
     }
     
     public PigFile(String filename){
-        file = filename;
+        file = filename+"_"+System.currentTimeMillis();
     }
     
     public DataBag load(LoadFunc lfunc, PigContext pigContext) throws IOException {

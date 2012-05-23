@@ -181,6 +181,7 @@ public class POStore extends PhysicalOperator {
     }
 
     public void setSFile(FileSpec sFile) {
+    	sFile.updateFileName();
         this.sFile = sFile;
     }
 

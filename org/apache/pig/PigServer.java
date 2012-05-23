@@ -390,9 +390,9 @@ public class PigServer {
         return jobs;
     }
 
-    public List<ExecJob> executeBatchFinalize(MROperPlan updatedMapReducePlan) throws FrontendException, ExecException {
+    public PigStats executeBatchFinalize(MROperPlan updatedMapReducePlan) throws FrontendException, ExecException {
         PigStats stats = executeBatchExFinalize(updatedMapReducePlan);
-        LinkedList<ExecJob> jobs = new LinkedList<ExecJob>();
+        /*LinkedList<ExecJob> jobs = new LinkedList<ExecJob>();
         JobGraph jGraph = stats.getJobGraph();
         Iterator<JobStats> iter = jGraph.iterator();
         while (iter.hasNext()) {
@@ -408,8 +408,8 @@ public class PigServer {
                     jobs.add(hjob);
                 }
             }
-        }
-        return jobs;
+        }*/
+        return stats;
     }
 
     /**

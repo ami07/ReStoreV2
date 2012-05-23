@@ -70,7 +70,10 @@ public abstract class OperatorPlan<E extends Operator> implements Iterable<E>, S
     protected Map<E, OperatorKey> mOps;
     protected Map<OperatorKey, E> mKeys;
     protected MultiMap<E, E> mFromEdges;
-    protected MultiMap<E, E> mToEdges;
+   
+
+
+	protected MultiMap<E, E> mToEdges;
     protected MultiMap<E, E> mSoftFromEdges;
     protected MultiMap<E, E> mSoftToEdges;
 
@@ -341,7 +344,9 @@ public abstract class OperatorPlan<E extends Operator> implements Iterable<E>, S
     }
 
 
-    /**
+    
+
+	/**
      * Find all of the nodes that have edges to the indicated node from
      * themselves.
      * @param op Node to look to
@@ -1642,6 +1647,22 @@ public abstract class OperatorPlan<E extends Operator> implements Iterable<E>, S
         return;
 
     }
+    
+    /**
+     * added for ReStore by @author iman
+     * @return
+     */
+    public Set<E> getmOps() {
+		return mOps.keySet();
+	}
+    
+    /**
+     * added for ReStore by @author iman
+     * @return
+     */
+    public MultiMap<E, E> getmFromEdges() {
+		return mFromEdges;
+	}
     
     /*
      * A helper class that computes the index of each reference in a list for a quick lookup
